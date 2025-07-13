@@ -1,0 +1,47 @@
+world-border-setting:
+  enabled: true
+  marker-set-setting:
+    name: 'World Border'
+    default-hidden: false
+    sorting: 0
+    disabled-maps: [ ]
+  label: World Border
+  outline-color: '#ff0000ff'
+  height: 63.0
+  update-interval: 15
+  disabled-worlds: [ ]
+world-guard-setting:
+  enabled: true
+  marker-set-setting:
+    name: 'WorldGuard'
+    default-hidden: false
+    sorting: 0
+    disabled-maps: [ ]
+  world-setting-map:
+    default:
+      enabled: true
+      disabled-maps: [ ]
+      update-interval: 10
+      update-limit: 50
+      render-setting:
+        default-render: true
+        owned-region:
+          fill-color: '#1e90ff1a'
+          outline-color: '#00bfff66'
+        unowned-region:
+          fill-color: '#1e90ff1a'
+          outline-color: '#00ff004d'
+        detail-format: |-
+          <h2 style="color:#00bfff;text-align:center;margin-block-end:0.3em">{region_name}</h2>
+          <br/>
+          <span style="font-size:100%;">Owners: </span><span style="font-weight:bold;">{region_owners}</span><br/>
+          <span style="font-size:100%;">Members: </span><span style="font-weight:bold;">{region_members}</span><br/>
+        render-3d: false
+        height: 63.0
+        min-distance: 0
+        max-distance: 1000.0
+      separation-setting:
+        enabled: false
+        label-format: 'WorldGuard (%min% ~ %max%)'
+        size: 3
+        sorting: 0

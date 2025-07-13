@@ -1,0 +1,9 @@
+name: BlueMapMarkers
+api-version: "1.13"
+main: net.okocraft.bluemapmarkers.BlueMapMarkersPlugin
+version: ${project.version}
+author: Siroshun09
+folia-supported: true
+
+depend: [ BlueMap ]
+softdepend: [ WorldGuard ]
