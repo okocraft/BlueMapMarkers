@@ -1,0 +1,22 @@
+[versions]
+
+paper = "1.21.11-R0.1-SNAPSHOT"
+bluemap = "2.7.7"
+worldguard = "7.0.15"
+
+codec4j = "0.2.0-beta.4"
+
+gradle-plugins = "1.6.1"
+
+[libraries]
+
+paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
+bluemap = { module = "de.bluecolored:bluemap-api", version.ref = "bluemap" }
+worldguard = { module = "com.sk89q.worldguard:worldguard-bukkit", version.ref = "worldguard" }
+
+codec4j-io-yaml = { module = "dev.siroshun.codec4j:codec4j-io-yaml", version.ref = "codec4j" }
+
+[plugins]
+
+jcommon = { id = "dev.siroshun.gradle.plugins.jcommon", version.ref = "gradle-plugins" }
+bundler = { id = "dev.siroshun.gradle.plugins.bundler", version.ref = "gradle-plugins" }
