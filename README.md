@@ -8,7 +8,7 @@ A Paper plugin for rendering BlueMap markers of world borders and WorldGuard's r
 
 ## Requirements
 
-- Java 21+
+- Java 25+
 - Paper
 - BlueMap
 
