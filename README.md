@@ -16,4 +16,4 @@ A Paper plugin for rendering BlueMap markers of world borders and WorldGuard's r
 
 This project is licensed under the permissive GPL-3.0 license. Please see [LICENSE](LICENSE) for more info.
 
-Copyright © 2025, OKOCRAFT
+Copyright © 2025-2026, OKOCRAFT
