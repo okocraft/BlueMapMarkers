@@ -4,7 +4,7 @@ paper = "1.21.11-R0.1-SNAPSHOT"
 bluemap = "2.7.7"
 worldguard = "7.0.15"
 
-codec4j = "0.2.0-beta.4"
+codec4j = "0.2.0-beta.5"
 
 gradle-plugins = "1.6.1"
 

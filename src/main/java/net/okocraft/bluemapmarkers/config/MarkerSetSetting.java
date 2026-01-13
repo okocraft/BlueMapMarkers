@@ -3,6 +3,7 @@ package net.okocraft.bluemapmarkers.config;
 import de.bluecolored.bluemap.api.markers.MarkerSet;
 import dev.siroshun.codec4j.api.codec.Codec;
 import dev.siroshun.codec4j.api.decoder.Decoder;
+import dev.siroshun.codec4j.api.decoder.collection.SetDecoder;
 import dev.siroshun.codec4j.api.decoder.object.FieldDecoder;
 import dev.siroshun.codec4j.api.decoder.object.ObjectDecoder;
 import org.jetbrains.annotations.NotNull;
@@ -16,7 +17,7 @@ public record MarkerSetSetting(String name, boolean defaultHidden, int sorting, 
             FieldDecoder.required("name", Codec.STRING),
             FieldDecoder.optional("default-hidden", Codec.BOOLEAN, false),
             FieldDecoder.optional("sorting", Codec.INT, 0),
-            FieldDecoder.optional("disabled-maps", Codec.STRING.toSetCodec(), Set.of())
+            FieldDecoder.optional("disabled-maps", SetDecoder.create(Codec.STRING), Set.of())
     );
 
     public @NotNull MarkerSet createMarkerSet() {

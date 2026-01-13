@@ -3,6 +3,8 @@ package net.okocraft.bluemapmarkers.config;
 import de.bluecolored.bluemap.api.math.Color;
 import dev.siroshun.codec4j.api.codec.Codec;
 import dev.siroshun.codec4j.api.decoder.Decoder;
+import dev.siroshun.codec4j.api.decoder.collection.MapDecoder;
+import dev.siroshun.codec4j.api.decoder.collection.SetDecoder;
 import dev.siroshun.codec4j.api.decoder.object.FieldDecoder;
 import dev.siroshun.codec4j.api.decoder.object.ObjectDecoder;
 
@@ -16,7 +18,7 @@ public record WorldGuardSetting(boolean enabled, MarkerSetSetting markerSetSetti
             WorldGuardSetting::new,
             FieldDecoder.optional("enabled", Codec.BOOLEAN, true),
             FieldDecoder.required("marker-set", MarkerSetSetting.DECODER),
-            FieldDecoder.required("world-setting-map", Codec.STRING.toMapDecoderAsKey(WorldSetting.DECODER))
+            FieldDecoder.required("world-setting-map", MapDecoder.create(Codec.STRING, WorldSetting.DECODER))
     );
 
     public record WorldSetting(boolean enabled, Set<String> disabledMaps, int updateInterval, int updateLimit,
@@ -24,7 +26,7 @@ public record WorldGuardSetting(boolean enabled, MarkerSetSetting markerSetSetti
         static final Decoder<WorldSetting> DECODER = ObjectDecoder.create(
                 WorldSetting::new,
                 FieldDecoder.optional("enabled", Codec.BOOLEAN, true),
-                FieldDecoder.optional("disabled-maps", Codec.STRING.toSetCodec(), Set.of()),
+                FieldDecoder.optional("disabled-maps", SetDecoder.create(Codec.STRING), Set.of()),
                 FieldDecoder.optional("update-interval", Codec.INT, 10),
                 FieldDecoder.optional("update-limit", Codec.INT, 50),
                 FieldDecoder.required("render-setting", RenderSetting.DECODER),
