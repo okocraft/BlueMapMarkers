@@ -10,6 +10,7 @@ jcommon {
     setupPaperRepository()
 
     repositories {
+        mavenCentral()
         maven {
             url = uri("https://maven.enginehub.org/repo/")
         }
