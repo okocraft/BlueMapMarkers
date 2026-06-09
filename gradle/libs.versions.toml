@@ -1,8 +1,8 @@
 [versions]
 
-paper = "26.1.2.build.66-stable"
+paper = "26.1.2.build.68-stable"
 bluemap = "2.7.7"
-worldguard = "7.0.16"
+worldguard = "7.0.17"
 
 codec4j = "0.2.0-beta.6"
 
