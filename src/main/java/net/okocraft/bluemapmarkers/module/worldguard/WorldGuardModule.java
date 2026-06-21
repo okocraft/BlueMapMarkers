@@ -7,6 +7,7 @@ import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import net.okocraft.bluemapmarkers.BlueMapMarkersPlugin;
 import net.okocraft.bluemapmarkers.config.WorldGuardSetting;
 import net.okocraft.bluemapmarkers.module.MarkerModule;
+import net.okocraft.bluemapmarkers.util.BlueMapWorldId;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -87,10 +88,18 @@ public class WorldGuardModule implements MarkerModule {
                 return;
             }
 
-            var world = Bukkit.getWorld(this.worldUid);
-            var blueMapWorld = BlueMapAPI.getInstance().orElseThrow().getWorld(this.worldUid);
+            var api = BlueMapAPI.getInstance().orElse(null);
+            if (api == null) {
+                return;
+            }
 
-            if (world == null || blueMapWorld.isEmpty() || blueMapWorld.get().getMaps().isEmpty()) {
+            var world = Bukkit.getWorld(this.worldUid);
+            if (world == null) {
+                return;
+            }
+
+            var blueMapWorld = api.getWorld(this.worldUid).or(() -> api.getWorld(BlueMapWorldId.create(world.getWorldPath(), world.getEnvironment())));
+            if (blueMapWorld.isEmpty() || blueMapWorld.get().getMaps().isEmpty()) {
                 scheduledTask.cancel();
                 return;
             }

@@ -5,6 +5,7 @@ import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import net.okocraft.bluemapmarkers.BlueMapMarkersPlugin;
 import net.okocraft.bluemapmarkers.config.WorldBorderSetting;
 import net.okocraft.bluemapmarkers.module.MarkerModule;
+import net.okocraft.bluemapmarkers.util.BlueMapWorldId;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
@@ -71,8 +72,7 @@ public class WorldBorderModule implements MarkerModule {
     }
 
     private void doUpdate(@NotNull BlueMapAPI api, @NotNull World world) {
-        var blueMapWorld = api.getWorld(world.getUID());
-
+        var blueMapWorld = api.getWorld(world.getUID()).or(() -> api.getWorld(BlueMapWorldId.create(world.getWorldPath(), world.getEnvironment())));
         if (blueMapWorld.isEmpty()) {
             return;
         }
