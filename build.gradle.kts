@@ -22,7 +22,11 @@ jcommon {
     commonDependencies {
         compileOnly(libs.paper.api)
         compileOnly(libs.bluemap)
-        compileOnly(libs.worldguard)
+        compileOnly(libs.worldguard) {
+            // WorldGuard strictly constrains Guava/Gson to older versions than Paper API requires
+            exclude(group = "com.google.guava", module = "guava")
+            exclude(group = "com.google.code.gson", module = "gson")
+        }
 
         implementation(libs.codec4j.io.yaml)
     }
