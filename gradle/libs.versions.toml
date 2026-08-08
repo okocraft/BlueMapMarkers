@@ -2,7 +2,7 @@
 
 paper = "26.2.build.87-stable"
 bluemap = "2.8.0"
-worldguard = "7.0.17"
+worldguard = "7.0.18"
 
 codec4j = "0.2.0-beta.6"
 
