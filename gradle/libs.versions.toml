@@ -1,12 +1,12 @@
 [versions]
 
-paper = "26.2.build.87-stable"
+paper = "26.2.build.92-stable"
 bluemap = "2.8.0"
 worldguard = "7.0.18"
 
 codec4j = "0.2.0-beta.6"
 
-gradle-plugins = "1.8.4"
+gradle-plugins = "1.8.5"
 
 [libraries]
 
