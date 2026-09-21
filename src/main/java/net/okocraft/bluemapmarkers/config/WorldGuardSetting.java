@@ -1,102 +1,298 @@
 package net.okocraft.bluemapmarkers.config;
 
 import de.bluecolored.bluemap.api.math.Color;
-import dev.siroshun.codec4j.api.codec.Codec;
-import dev.siroshun.codec4j.api.decoder.Decoder;
-import dev.siroshun.codec4j.api.decoder.collection.MapDecoder;
-import dev.siroshun.codec4j.api.decoder.collection.SetDecoder;
-import dev.siroshun.codec4j.api.decoder.object.FieldDecoder;
-import dev.siroshun.codec4j.api.decoder.object.ObjectDecoder;
-import dev.siroshun.codec4j.api.error.DecodeError;
-import dev.siroshun.jfun.result.Result;
+import org.spongepowered.configurate.objectmapping.ConfigSerializable;
+import org.spongepowered.configurate.objectmapping.meta.Setting;
 
 import java.util.Map;
 import java.util.Set;
 
-public record WorldGuardSetting(boolean enabled, MarkerSetSetting markerSetSetting,
-                                Map<String, WorldSetting> worldSettingMap) {
+@ConfigSerializable
+public final class WorldGuardSetting {
 
-    private static final Decoder<Integer> POSITIVE_INT_DECODER = Codec.INT.flatMap(value ->
-            value > 0 ? Result.success(value) : DecodeError.failure("Expected a positive integer").asFailure()
-    );
-    private static final Decoder<Integer> NON_NEGATIVE_INT_DECODER = Codec.INT.flatMap(value ->
-            value >= 0 ? Result.success(value) : DecodeError.failure("Expected a non-negative integer").asFailure()
-    );
+    private boolean enabled = true;
+    @Setting("marker-set")
+    private MarkerSetSetting markerSetSetting = new MarkerSetSetting("WorldGuard", false, 0, Set.of());
+    @Setting("world-setting-map")
+    private Map<String, WorldSetting> worldSettingMap = Map.of("default", new WorldSetting());
 
-    static final Decoder<WorldGuardSetting> DECODER = ObjectDecoder.create(
-            WorldGuardSetting::new,
-            FieldDecoder.optional("enabled", Codec.BOOLEAN, true),
-            FieldDecoder.required("marker-set", MarkerSetSetting.DECODER),
-            FieldDecoder.required("world-setting-map", MapDecoder.create(Codec.STRING, WorldSetting.DECODER))
-    );
+    public WorldGuardSetting() {
+    }
 
-    public record WorldSetting(boolean enabled, Set<String> disabledMaps, int updateInterval, int updateLimit,
-                               RenderSetting renderSetting, SeparationSetting separationSetting) {
-        static final Decoder<WorldSetting> DECODER = ObjectDecoder.create(
-                WorldSetting::new,
-                FieldDecoder.optional("enabled", Codec.BOOLEAN, true),
-                FieldDecoder.optional("disabled-maps", SetDecoder.create(Codec.STRING), Set.of()),
-                FieldDecoder.optional("update-interval", NON_NEGATIVE_INT_DECODER, 10),
-                FieldDecoder.optional("update-limit", POSITIVE_INT_DECODER, 50),
-                FieldDecoder.required("render-setting", RenderSetting.DECODER),
-                FieldDecoder.required("separation-setting", SeparationSetting.DECODER)
-        );
+    public WorldGuardSetting(
+            boolean enabled,
+            MarkerSetSetting markerSetSetting,
+            Map<String, WorldSetting> worldSettingMap
+    ) {
+        this.enabled = enabled;
+        this.markerSetSetting = markerSetSetting;
+        this.worldSettingMap = worldSettingMap;
+    }
+
+    public boolean enabled() {
+        return this.enabled;
+    }
+
+    public MarkerSetSetting markerSetSetting() {
+        return this.markerSetSetting;
+    }
+
+    public Map<String, WorldSetting> worldSettingMap() {
+        return this.worldSettingMap;
+    }
+
+    @ConfigSerializable
+    public static final class WorldSetting {
+
+        private boolean enabled = true;
+        @Setting("disabled-maps")
+        private Set<String> disabledMaps = Set.of();
+        @Setting("update-interval")
+        private int updateInterval = 10;
+        @Setting("update-limit")
+        private int updateLimit = 50;
+        @Setting("render-setting")
+        private RenderSetting renderSetting = new RenderSetting();
+        @Setting("separation-setting")
+        private SeparationSetting separationSetting = new SeparationSetting();
+
+        public WorldSetting() {
+        }
+
+        public WorldSetting(
+                boolean enabled,
+                Set<String> disabledMaps,
+                int updateInterval,
+                int updateLimit,
+                RenderSetting renderSetting,
+                SeparationSetting separationSetting
+        ) {
+            this.enabled = enabled;
+            this.disabledMaps = disabledMaps;
+            this.updateInterval = updateInterval;
+            this.updateLimit = updateLimit;
+            this.renderSetting = renderSetting;
+            this.separationSetting = separationSetting;
+        }
+
+        public boolean enabled() {
+            return this.enabled;
+        }
+
+        public Set<String> disabledMaps() {
+            return this.disabledMaps;
+        }
+
+        public int updateInterval() {
+            return this.updateInterval;
+        }
+
+        public int updateLimit() {
+            return this.updateLimit;
+        }
+
+        public RenderSetting renderSetting() {
+            return this.renderSetting;
+        }
+
+        public SeparationSetting separationSetting() {
+            return this.separationSetting;
+        }
     }
 
     public interface RegionColor {
+
         Color fillColor();
 
         Color outlineColor();
     }
 
-    public record OwnedRegionColor(Color fillColor, Color outlineColor) implements RegionColor {
-        static final Decoder<OwnedRegionColor> DECODER = ObjectDecoder.create(
-                OwnedRegionColor::new,
-                FieldDecoder.optional("fill-color", ColorCodec.COLOR_DECODER, new Color(30, 144, 255, 1)),
-                FieldDecoder.optional("outline-color", ColorCodec.COLOR_DECODER, new Color(0, 191, 255, 1))
-        );
+    @ConfigSerializable
+    public static final class OwnedRegionColor implements RegionColor {
+
+        @Setting("fill-color")
+        private String fillColorValue = "#1e90ffff";
+        @Setting("outline-color")
+        private String outlineColorValue = "#00bfffff";
+
+        private transient Color fillColor;
+        private transient Color outlineColor;
+
+        public OwnedRegionColor() {
+        }
+
+        public OwnedRegionColor(Color fillColor, Color outlineColor) {
+            this.fillColor = fillColor;
+            this.outlineColor = outlineColor;
+        }
+
+        @Override
+        public Color fillColor() {
+            if (this.fillColor == null) {
+                this.fillColor = new Color(this.fillColorValue);
+            }
+            return this.fillColor;
+        }
+
+        @Override
+        public Color outlineColor() {
+            if (this.outlineColor == null) {
+                this.outlineColor = new Color(this.outlineColorValue);
+            }
+            return this.outlineColor;
+        }
     }
 
-    public record UnownedRegionColor(Color fillColor, Color outlineColor) implements RegionColor {
-        static final Decoder<UnownedRegionColor> DECODER = ObjectDecoder.create(
-                UnownedRegionColor::new,
-                FieldDecoder.optional("fill-color", ColorCodec.COLOR_DECODER, new Color(30, 144, 255, 1)),
-                FieldDecoder.optional("outline-color", ColorCodec.COLOR_DECODER, new Color(0, 255, 0, 1))
-        );
+    @ConfigSerializable
+    public static final class UnownedRegionColor implements RegionColor {
+
+        @Setting("fill-color")
+        private String fillColorValue = "#1e90ffff";
+        @Setting("outline-color")
+        private String outlineColorValue = "#00ff00ff";
+
+        private transient Color fillColor;
+        private transient Color outlineColor;
+
+        public UnownedRegionColor() {
+        }
+
+        public UnownedRegionColor(Color fillColor, Color outlineColor) {
+            this.fillColor = fillColor;
+            this.outlineColor = outlineColor;
+        }
+
+        @Override
+        public Color fillColor() {
+            if (this.fillColor == null) {
+                this.fillColor = new Color(this.fillColorValue);
+            }
+            return this.fillColor;
+        }
+
+        @Override
+        public Color outlineColor() {
+            if (this.outlineColor == null) {
+                this.outlineColor = new Color(this.outlineColorValue);
+            }
+            return this.outlineColor;
+        }
     }
 
-    public record RenderSetting(boolean defaultRender, OwnedRegionColor ownedRegion, UnownedRegionColor unownedRegion,
-                                String detailFormat, boolean render3D, float height,
-                                double minDistance, double maxDistance) {
+    @ConfigSerializable
+    public static final class RenderSetting {
 
-        static final Decoder<RenderSetting> DECODER = ObjectDecoder.create(
-                RenderSetting::new,
-                FieldDecoder.optional("default-render", Codec.BOOLEAN, true),
-                FieldDecoder.required("owned-region", OwnedRegionColor.DECODER),
-                FieldDecoder.required("unowned-region", UnownedRegionColor.DECODER),
-                FieldDecoder.optional("detail-format", Codec.STRING, """
-                        <h2 style="color:#00bfff;text-align:center;margin-block-end:0.3em">{region_displayname}</h2>
-                        <br/>
-                        <span style="font-size:100%;">Owners: </span><span style="font-weight:bold;">{region_owners}</span><br/>
-                        <span style="font-size:100%;">Members: </span><span style="font-weight:bold;">{region_members}</span><br/>
-                        """.strip()),
-                FieldDecoder.optional("render-3d", Codec.BOOLEAN, true),
-                FieldDecoder.optional("height", Codec.FLOAT, 63f),
-                FieldDecoder.optional("min-distance", Codec.DOUBLE, 0d),
-                FieldDecoder.optional("max-distance", Codec.DOUBLE, 1000d)
-        );
+        @Setting("default-render")
+        private boolean defaultRender = true;
+        @Setting("owned-region")
+        private OwnedRegionColor ownedRegion = new OwnedRegionColor();
+        @Setting("unowned-region")
+        private UnownedRegionColor unownedRegion = new UnownedRegionColor();
+        @Setting("detail-format")
+        private String detailFormat = """
+                <h2 style="color:#00bfff;text-align:center;margin-block-end:0.3em">{region_displayname}</h2>
+                <br/>
+                <span style="font-size:100%;">Owners: </span><span style="font-weight:bold;">{region_owners}</span><br/>
+                <span style="font-size:100%;">Members: </span><span style="font-weight:bold;">{region_members}</span><br/>
+                """.strip();
+        @Setting("render-3d")
+        private boolean render3D = true;
+        private float height = 63f;
+        @Setting("min-distance")
+        private double minDistance = 0d;
+        @Setting("max-distance")
+        private double maxDistance = 1000d;
 
+        public RenderSetting() {
+        }
+
+        public RenderSetting(
+                boolean defaultRender,
+                OwnedRegionColor ownedRegion,
+                UnownedRegionColor unownedRegion,
+                String detailFormat,
+                boolean render3D,
+                float height,
+                double minDistance,
+                double maxDistance
+        ) {
+            this.defaultRender = defaultRender;
+            this.ownedRegion = ownedRegion;
+            this.unownedRegion = unownedRegion;
+            this.detailFormat = detailFormat;
+            this.render3D = render3D;
+            this.height = height;
+            this.minDistance = minDistance;
+            this.maxDistance = maxDistance;
+        }
+
+        public boolean defaultRender() {
+            return this.defaultRender;
+        }
+
+        public OwnedRegionColor ownedRegion() {
+            return this.ownedRegion;
+        }
+
+        public UnownedRegionColor unownedRegion() {
+            return this.unownedRegion;
+        }
+
+        public String detailFormat() {
+            return this.detailFormat;
+        }
+
+        public boolean render3D() {
+            return this.render3D;
+        }
+
+        public float height() {
+            return this.height;
+        }
+
+        public double minDistance() {
+            return this.minDistance;
+        }
+
+        public double maxDistance() {
+            return this.maxDistance;
+        }
     }
 
-    public record SeparationSetting(boolean enabled, String labelFormat, int size, int centerSize) {
+    @ConfigSerializable
+    public static final class SeparationSetting {
 
-        static final Decoder<SeparationSetting> DECODER = ObjectDecoder.create(
-                SeparationSetting::new,
-                FieldDecoder.optional("enabled", Codec.BOOLEAN, true),
-                FieldDecoder.optional("label-format", Codec.STRING, "WorldGuard (%min% ~ %max%)"),
-                FieldDecoder.optional("size", POSITIVE_INT_DECODER, 3),
-                FieldDecoder.optional("center-size", NON_NEGATIVE_INT_DECODER, 500)
-        );
+        private boolean enabled = true;
+        @Setting("label-format")
+        private String labelFormat = "WorldGuard (%min% ~ %max%)";
+        private int size = 3;
+        @Setting("center-size")
+        private int centerSize = 500;
 
+        public SeparationSetting() {
+        }
+
+        public SeparationSetting(boolean enabled, String labelFormat, int size, int centerSize) {
+            this.enabled = enabled;
+            this.labelFormat = labelFormat;
+            this.size = size;
+            this.centerSize = centerSize;
+        }
+
+        public boolean enabled() {
+            return this.enabled;
+        }
+
+        public String labelFormat() {
+            return this.labelFormat;
+        }
+
+        public int size() {
+            return this.size;
+        }
+
+        public int centerSize() {
+            return this.centerSize;
+        }
     }
 }
