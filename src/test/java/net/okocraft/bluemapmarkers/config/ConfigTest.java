@@ -174,6 +174,16 @@ class ConfigTest {
     }
 
     @Test
+    void testLoadRejectsNegativeDecimalWorldGuardUpdateLimit() {
+        var yaml = MINIMAL_CONFIG.replace(
+                "    default:\n      render-setting:",
+                "    default:\n      update-limit: -1.0\n      render-setting:"
+        );
+
+        Assertions.assertThrows(ConfigurateException.class, () -> this.load(yaml));
+    }
+
+    @Test
     void testLoadRejectsNonPositiveSeparationSize() {
         var yaml = MINIMAL_CONFIG.replace(
                 "      separation-setting: {}",
@@ -198,6 +208,26 @@ class ConfigTest {
         var yaml = MINIMAL_CONFIG.replace(
                 "  marker-set:\n    name: Border\n",
                 "  marker-set:\n    name: Border\n  outline-color: not-a-color\n"
+        );
+
+        Assertions.assertThrows(ConfigurateException.class, () -> this.load(yaml));
+    }
+
+    @Test
+    void testLoadRejectsMappingColor() {
+        var yaml = MINIMAL_CONFIG.replace(
+                "  marker-set:\n    name: Border\n",
+                "  marker-set:\n    name: Border\n  outline-color: { invalid: value }\n"
+        );
+
+        Assertions.assertThrows(ConfigurateException.class, () -> this.load(yaml));
+    }
+
+    @Test
+    void testLoadRejectsListColor() {
+        var yaml = MINIMAL_CONFIG.replace(
+                "  marker-set:\n    name: Border\n",
+                "  marker-set:\n    name: Border\n  outline-color: [ '#ff0000ff' ]\n"
         );
 
         Assertions.assertThrows(ConfigurateException.class, () -> this.load(yaml));
