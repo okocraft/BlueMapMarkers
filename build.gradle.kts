@@ -44,10 +44,6 @@ jcommon {
 }
 
 
-base {
-    archivesName = "BlueMapMarkers"
-}
-
 val projectVersion = project.version.toString()
 
 tasks.processResources {
