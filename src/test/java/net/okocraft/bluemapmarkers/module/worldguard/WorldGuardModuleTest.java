@@ -131,6 +131,42 @@ class WorldGuardModuleTest {
     }
 
     @Test
+    void testStartUsesWorldKeySettingWhenNameIsNotConfigured() {
+        var plugin = Mockito.mock(BlueMapMarkersPlugin.class);
+        var pluginManager = Mockito.mock(PluginManager.class);
+        var scheduler = Mockito.mock(GlobalRegionScheduler.class);
+        var task = Mockito.mock(ScheduledTask.class);
+        var world = world("world", "minecraft:overworld");
+
+        Mockito.when(scheduler.runAtFixedRate(
+                Mockito.eq(plugin),
+                Mockito.any(),
+                Mockito.eq(20L),
+                Mockito.eq(20L)
+        )).thenReturn(task);
+
+        try (var bukkit = Mockito.mockStatic(Bukkit.class)) {
+            bukkit.when(Bukkit::getPluginManager).thenReturn(pluginManager);
+            bukkit.when(Bukkit::getWorlds).thenReturn(List.of(world));
+            bukkit.when(Bukkit::getGlobalRegionScheduler).thenReturn(scheduler);
+
+            var module = new WorldGuardModule(setting(Map.of(
+                    "default", worldSetting(false),
+                    "minecraft:overworld", worldSetting(true)
+            )));
+            module.init(plugin);
+            module.start();
+
+            Mockito.verify(scheduler).runAtFixedRate(
+                    Mockito.eq(plugin),
+                    Mockito.any(),
+                    Mockito.eq(20L),
+                    Mockito.eq(20L)
+            );
+        }
+    }
+
+    @Test
     void testStartWarnsWhenWorldHasNoSettingOrDefault() {
         var logger = Mockito.mock(Logger.class);
         var plugin = Mockito.mock(BlueMapMarkersPlugin.class);
