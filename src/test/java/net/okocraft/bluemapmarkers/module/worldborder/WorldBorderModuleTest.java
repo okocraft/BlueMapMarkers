@@ -122,6 +122,7 @@ class WorldBorderModuleTest {
         var enabledMarkerSets = new HashMap<String, de.bluecolored.bluemap.api.markers.MarkerSet>();
         var disabledMarkerSets = new HashMap<String, de.bluecolored.bluemap.api.markers.MarkerSet>();
         Mockito.when(api.getWorld(WORLD_ID)).thenReturn(Optional.of(blueMapWorld));
+        Mockito.when(api.getMaps()).thenReturn(List.of(enabledMap, disabledMap));
         Mockito.when(blueMapWorld.getMaps()).thenReturn(List.of(enabledMap, disabledMap));
         Mockito.when(enabledMap.getId()).thenReturn("enabled-map");
         Mockito.when(disabledMap.getId()).thenReturn("disabled-map");
