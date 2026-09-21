@@ -11,10 +11,10 @@ import java.util.Set;
 public final class MarkerSetSetting {
 
     @Required
-    private String name;
-    private boolean defaultHidden = false;
-    private int sorting = 0;
-    private Set<String> disabledMaps = Set.of();
+    public String name;
+    public boolean defaultHidden = false;
+    public int sorting = 0;
+    public Set<String> disabledMaps = Set.of();
 
     public MarkerSetSetting() {
     }
@@ -24,22 +24,6 @@ public final class MarkerSetSetting {
         this.defaultHidden = defaultHidden;
         this.sorting = sorting;
         this.disabledMaps = disabledMaps;
-    }
-
-    public String name() {
-        return this.name;
-    }
-
-    public boolean defaultHidden() {
-        return this.defaultHidden;
-    }
-
-    public int sorting() {
-        return this.sorting;
-    }
-
-    public Set<String> disabledMaps() {
-        return this.disabledMaps;
     }
 
     public @NotNull MarkerSet createMarkerSet() {
