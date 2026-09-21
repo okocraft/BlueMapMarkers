@@ -10,7 +10,6 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import de.bluecolored.bluemap.api.math.Shape;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
 
 final class RegionRenderer {
@@ -92,56 +91,64 @@ final class RegionRenderer {
             pointsRef = points.reverse();
         }
 
-        List<BlockVector2> pointAdded = new ArrayList<>();
+        int additionalPoints = 0;
+        for (int i = 0, size = pointsRef.size(); i < size; i++) {
+            BlockVector2 prev = pointsRef.get((i - 1 + size) % size);
+            BlockVector2 cur = pointsRef.get(i);
+            BlockVector2 next = pointsRef.get((i + 1) % size);
+            if (isBacktracking(prev, cur, next)) {
+                additionalPoints++;
+            }
+        }
+
+        Vector2d[] result = new Vector2d[pointsRef.size() + additionalPoints];
+        int resultIndex = 0;
 
         for (int i = 0, size = pointsRef.size(); i < size; i++) {
             BlockVector2 prev = pointsRef.get((i - 1 + size) % size);
             BlockVector2 cur = pointsRef.get(i);
             BlockVector2 next = pointsRef.get((i + 1) % size);
+            boolean backtracking = isBacktracking(prev, cur, next);
 
-            pointAdded.add(cur);
-
-            int incomingX = cur.x() - prev.x();
-            int incomingZ = cur.z() - prev.z();
-            int outgoingX = next.x() - cur.x();
-            int outgoingZ = next.z() - cur.z();
-
-            double cross = (double) incomingX * outgoingZ - (double) incomingZ * outgoingX;
-            int dot = incomingX * outgoingX + incomingZ * outgoingZ;
-
-            if (cross == 0 && dot < 0) {
-                pointAdded.add(cur);
+            result[resultIndex++] = expandPoint(prev, cur, backtracking ? cur : next);
+            if (backtracking) {
+                result[resultIndex++] = expandPoint(cur, cur, next);
             }
-        }
-
-        Vector2d[] result = new Vector2d[pointAdded.size()];
-
-        for (int i = 0, size = pointAdded.size(); i < size; i++) {
-            BlockVector2 prev = pointAdded.get((i - 1 + size) % size);
-            BlockVector2 cur = pointAdded.get(i);
-            BlockVector2 next = pointAdded.get((i + 1) % size);
-
-            int xPrev = prev.x();
-            int zPrev = prev.z();
-            int xCur = cur.x();
-            int zCur = cur.z();
-            int xNext = next.x();
-            int zNext = next.z();
-
-            int xCurNew = xCur;
-            int zCurNew = zCur;
-
-            if (zPrev < zCur || zCur < zNext || cur.equals(next) && xPrev < xCur || prev.equals(cur) && xNext < xCur) {
-                xCurNew++;
-            }
-            if (xCur < xPrev || xNext < xCur || cur.equals(next) && zPrev < zCur || prev.equals(cur) && zNext < zCur) {
-                zCurNew++;
-            }
-
-            result[i] = new Vector2d(xCurNew, zCurNew);
         }
 
         return result;
+    }
+
+    private static boolean isBacktracking(BlockVector2 prev, BlockVector2 cur, BlockVector2 next) {
+        int incomingX = cur.x() - prev.x();
+        int incomingZ = cur.z() - prev.z();
+        int outgoingX = next.x() - cur.x();
+        int outgoingZ = next.z() - cur.z();
+
+        double cross = (double) incomingX * outgoingZ - (double) incomingZ * outgoingX;
+        int dot = incomingX * outgoingX + incomingZ * outgoingZ;
+        return cross == 0 && dot < 0;
+    }
+
+    private static Vector2d expandPoint(BlockVector2 prev, BlockVector2 cur, BlockVector2 next) {
+        int xPrev = prev.x();
+        int zPrev = prev.z();
+        int xCur = cur.x();
+        int zCur = cur.z();
+        int xNext = next.x();
+        int zNext = next.z();
+
+        int xCurNew = xCur;
+        int zCurNew = zCur;
+
+        if (zPrev < zCur || zCur < zNext || cur.equals(next) && xPrev < xCur || prev.equals(cur) && xNext < xCur) {
+            xCurNew++;
+        }
+        if (xCur < xPrev || xNext < xCur || cur.equals(next) && zPrev < zCur || prev.equals(cur) && zNext < zCur) {
+            zCurNew++;
+        }
+
+        return new Vector2d(xCurNew, zCurNew);
     }
 
     static Vector2d[] expandPolygonXZByOneForBenchmark(ImmutableList<BlockVector2> points) {
