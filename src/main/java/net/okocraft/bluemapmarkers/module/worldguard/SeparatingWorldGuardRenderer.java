@@ -47,8 +47,24 @@ class SeparatingWorldGuardRenderer extends WorldGuardRenderer {
 
     @Override
     void putMarkerSets(@NotNull UUID worldUid, @NotNull BlueMapMap target) {
+        this.separatedMarkerSetMap.int2ObjectEntrySet().removeIf(entry -> entry.getValue().getMarkers().isEmpty());
+
+        var markerSetIdPrefix = "WorldGuard-" + worldUid + "_";
+        target.getMarkerSets().keySet().removeIf(markerSetId -> {
+            if (!markerSetId.startsWith(markerSetIdPrefix)) {
+                return false;
+            }
+
+            try {
+                int markerSetKey = Integer.parseInt(markerSetId.substring(markerSetIdPrefix.length()));
+                return !this.separatedMarkerSetMap.containsKey(markerSetKey);
+            } catch (NumberFormatException ignored) {
+                return false;
+            }
+        });
+
         for (var entry : this.separatedMarkerSetMap.int2ObjectEntrySet()) {
-            target.getMarkerSets().put("WorldGuard-" + worldUid + "_" + entry.getIntKey(), entry.getValue());
+            target.getMarkerSets().put(markerSetIdPrefix + entry.getIntKey(), entry.getValue());
         }
     }
 
