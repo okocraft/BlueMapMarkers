@@ -1,6 +1,7 @@
 package net.okocraft.bluemapmarkers.module.worldguard;
 
 import com.flowpowered.math.vector.Vector3d;
+import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.flags.StringFlag;
 import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
@@ -15,7 +16,6 @@ import net.okocraft.bluemapmarkers.config.WorldGuardSetting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.UUID;
 
@@ -32,9 +32,17 @@ abstract class WorldGuardRenderer {
     private final DetailFormatter detailFormatter;
 
     static void register(@NotNull FlagRegistry registry) {
+        register(registry, RENDER_FLAG);
+        register(registry, COLOR_FLAG);
+        register(registry, OUTLINE_FLAG);
+        register(registry, DISPLAY_FLAG);
+    }
+
+    private static void register(@NotNull FlagRegistry registry, @NotNull Flag<?> flag) {
         try {
-            registry.registerAll(Arrays.asList(RENDER_FLAG, COLOR_FLAG, OUTLINE_FLAG, DISPLAY_FLAG));
-        } catch (Exception ignored) {
+            registry.register(flag);
+        } catch (com.sk89q.worldguard.protection.flags.registry.FlagConflictException e) {
+            throw new IllegalStateException("WorldGuard flag '" + flag.getName() + "' is already registered", e);
         }
     }
 
