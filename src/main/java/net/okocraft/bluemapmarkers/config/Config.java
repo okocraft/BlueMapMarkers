@@ -12,9 +12,9 @@ import java.nio.file.Path;
 public final class Config {
 
     @Required
-    private WorldBorderSetting worldBorderSetting;
+    public WorldBorderSetting worldBorderSetting;
     @Required
-    private WorldGuardSetting worldGuardSetting;
+    public WorldGuardSetting worldGuardSetting;
 
     public Config() {
     }
@@ -22,14 +22,6 @@ public final class Config {
     public Config(@NotNull WorldBorderSetting worldBorderSetting, @NotNull WorldGuardSetting worldGuardSetting) {
         this.worldBorderSetting = worldBorderSetting;
         this.worldGuardSetting = worldGuardSetting;
-    }
-
-    public @NotNull WorldBorderSetting worldBorderSetting() {
-        return this.worldBorderSetting;
-    }
-
-    public @NotNull WorldGuardSetting worldGuardSetting() {
-        return this.worldGuardSetting;
     }
 
     public static @NotNull Config loadFromYamlFile(@NotNull Path filepath) throws IOException {
