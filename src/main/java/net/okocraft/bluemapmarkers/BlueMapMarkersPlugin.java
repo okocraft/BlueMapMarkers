@@ -22,6 +22,13 @@ public class BlueMapMarkersPlugin extends JavaPlugin {
     private final List<MarkerModule> modules = new ArrayList<>();
 
     @Override
+    public void onLoad() {
+        if (this.getServer().getPluginManager().getPlugin("WorldGuard") != null) {
+            WorldGuardModule.registerFlags();
+        }
+    }
+
+    @Override
     public void onEnable() {
         Path configFilepath = this.getDataFolder().toPath().resolve("config.yml");
         if (Files.notExists(configFilepath)) {
@@ -30,6 +37,7 @@ public class BlueMapMarkersPlugin extends JavaPlugin {
                     this.getSLF4JLogger().error("Could not find config.yml in the jar file");
                     return;
                 }
+                Files.createDirectories(configFilepath.getParent());
                 Files.copy(in, configFilepath);
             } catch (IOException e) {
                 this.getSLF4JLogger().error("Could not copy config.yml from the jar file", e);
