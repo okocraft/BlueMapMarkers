@@ -32,11 +32,8 @@ class ConfigTest {
 
     @Test
     void testLoadAppliesDefaults() throws IOException {
-        var result = this.load(MINIMAL_CONFIG);
+        var config = this.load(MINIMAL_CONFIG);
 
-        Assertions.assertFalse(result.isFailure());
-
-        var config = result.unwrap();
         var worldBorder = config.worldBorderSetting();
         Assertions.assertTrue(worldBorder.enabled());
         Assertions.assertEquals("World Border", worldBorder.label());
@@ -89,73 +86,71 @@ class ConfigTest {
             var path = this.tempDir.resolve("bundled-config.yml");
             Files.copy(input, path);
 
-            var result = Config.loadFromYamlFile(path);
-            Assertions.assertFalse(result.isFailure(), result::toString);
+            Assertions.assertDoesNotThrow(() -> Config.loadFromYamlFile(path));
         }
     }
 
     @Test
-    void testLoadRejectsNonPositiveWorldBorderUpdateInterval() throws IOException {
+    void testLoadRejectsNonPositiveWorldBorderUpdateInterval() {
         var yaml = MINIMAL_CONFIG.replace(
                 "  marker-set:\n    name: Border\n",
                 "  marker-set:\n    name: Border\n  update-interval: 0\n"
         );
 
-        Assertions.assertTrue(this.load(yaml).isFailure());
+        Assertions.assertThrows(IOException.class, () -> this.load(yaml));
     }
 
     @Test
-    void testLoadRejectsNegativeWorldGuardUpdateInterval() throws IOException {
+    void testLoadRejectsNegativeWorldGuardUpdateInterval() {
         var yaml = MINIMAL_CONFIG.replace(
                 "    default:\n      render-setting:",
                 "    default:\n      update-interval: -1\n      render-setting:"
         );
 
-        Assertions.assertTrue(this.load(yaml).isFailure());
+        Assertions.assertThrows(IOException.class, () -> this.load(yaml));
     }
 
     @Test
-    void testLoadRejectsNonPositiveWorldGuardUpdateLimit() throws IOException {
+    void testLoadRejectsNonPositiveWorldGuardUpdateLimit() {
         var yaml = MINIMAL_CONFIG.replace(
                 "    default:\n      render-setting:",
                 "    default:\n      update-limit: 0\n      render-setting:"
         );
 
-        Assertions.assertTrue(this.load(yaml).isFailure());
+        Assertions.assertThrows(IOException.class, () -> this.load(yaml));
     }
 
     @Test
-    void testLoadRejectsNonPositiveSeparationSize() throws IOException {
+    void testLoadRejectsNonPositiveSeparationSize() {
         var yaml = MINIMAL_CONFIG.replace(
                 "      separation-setting: {}",
                 "      separation-setting:\n        size: 0"
         );
 
-        Assertions.assertTrue(this.load(yaml).isFailure());
+        Assertions.assertThrows(IOException.class, () -> this.load(yaml));
     }
 
     @Test
-    void testLoadRejectsNegativeSeparationCenterSize() throws IOException {
+    void testLoadRejectsNegativeSeparationCenterSize() {
         var yaml = MINIMAL_CONFIG.replace(
                 "      separation-setting: {}",
                 "      separation-setting:\n        center-size: -1"
         );
 
-        Assertions.assertTrue(this.load(yaml).isFailure());
+        Assertions.assertThrows(IOException.class, () -> this.load(yaml));
     }
 
     @Test
-    void testLoadRejectsInvalidColor() throws IOException {
+    void testLoadRejectsInvalidColor() {
         var yaml = MINIMAL_CONFIG.replace(
                 "  marker-set:\n    name: Border\n",
                 "  marker-set:\n    name: Border\n  outline-color: not-a-color\n"
         );
 
-        Assertions.assertTrue(this.load(yaml).isFailure());
+        Assertions.assertThrows(IOException.class, () -> this.load(yaml));
     }
 
-    private dev.siroshun.jfun.result.Result<Config, dev.siroshun.codec4j.api.error.DecodeError> load(String yaml)
-            throws IOException {
+    private Config load(String yaml) throws IOException {
         var path = this.tempDir.resolve("config.yml");
         Files.writeString(path, yaml);
         return Config.loadFromYamlFile(path);
