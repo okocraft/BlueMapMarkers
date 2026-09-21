@@ -4,7 +4,7 @@ paper = "26.2.build.123-stable"
 bluemap = "2.8.0"
 worldguard = "7.0.18"
 
-codec4j = "0.2.0-beta.6"
+configurate = "4.2.0"
 
 junit = "6.1.3"
 mockito = "5.23.0"
@@ -17,7 +17,7 @@ paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
 bluemap = { module = "de.bluecolored:bluemap-api", version.ref = "bluemap" }
 worldguard = { module = "com.sk89q.worldguard:worldguard-bukkit", version.ref = "worldguard" }
 
-codec4j-io-yaml = { module = "dev.siroshun.codec4j:codec4j-io-yaml", version.ref = "codec4j" }
+configurate-yaml = { module = "org.spongepowered:configurate-yaml", version.ref = "configurate" }
 
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
