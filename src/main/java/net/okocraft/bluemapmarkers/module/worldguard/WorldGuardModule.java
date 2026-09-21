@@ -97,7 +97,7 @@ public class WorldGuardModule implements MarkerModule, Listener {
 
     private void startWorld(@NotNull World world) {
         this.scheduledTasks.computeIfAbsent(world.getUID(), worldUid -> {
-            var worldSettingMap = this.setting.worldSettingMap();
+            var worldSettingMap = this.setting.worldSettingMap;
             var worldSetting = worldSettingMap.getOrDefault(
                     world.getName(),
                     worldSettingMap.getOrDefault(world.getKey().asString(), worldSettingMap.get("default"))
@@ -111,14 +111,14 @@ public class WorldGuardModule implements MarkerModule, Listener {
                 return null;
             }
 
-            if (!worldSetting.enabled()) {
+            if (!worldSetting.enabled) {
                 return null;
             }
 
             WorldGuardRenderer renderer =
-                    worldSetting.separationSetting().enabled() ?
-                            new SeparatingWorldGuardRenderer(worldSetting, this.setting.markerSetSetting()) :
-                            new DefaultWorldGuardRenderer(worldSetting, this.setting.markerSetSetting());
+                    worldSetting.separationSetting.enabled ?
+                            new SeparatingWorldGuardRenderer(worldSetting, this.setting.markerSetSetting) :
+                            new DefaultWorldGuardRenderer(worldSetting, this.setting.markerSetSetting);
 
             return Bukkit.getGlobalRegionScheduler().runAtFixedRate(
                     this.plugin,
@@ -148,7 +148,7 @@ public class WorldGuardModule implements MarkerModule, Listener {
             this.worldUid = worldUid;
             this.renderer = renderer;
             this.setting = setting;
-            this.updater = new QueueingMarkerUpdater(setting.updateLimit());
+            this.updater = new QueueingMarkerUpdater(setting.updateLimit);
             this.scheduledTasks = scheduledTasks;
         }
 
@@ -183,13 +183,13 @@ public class WorldGuardModule implements MarkerModule, Listener {
             }
 
             if (this.updater.isFinished()) { // If the updater is completed in previous process, reset cooldown
-                this.cooldown = this.setting.updateInterval();
+                this.cooldown = this.setting.updateInterval;
             }
 
             boolean finished = this.updater.doUpdate(this.renderer, regionManager);
 
             for (var map : blueMapWorld.get().getMaps()) {
-                if (!this.setting.disabledMaps().contains(map.getId())) {
+                if (!this.setting.disabledMaps.contains(map.getId())) {
                     this.renderer.putMarkerSets(this.worldUid, map);
                 }
             }
