@@ -4,6 +4,7 @@ import de.bluecolored.bluemap.api.math.Color;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.spongepowered.configurate.ConfigurateException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -60,6 +61,10 @@ class ConfigTest {
 
         var renderSetting = worldSetting.renderSetting();
         Assertions.assertTrue(renderSetting.defaultRender());
+        Assertions.assertEquals(new Color(30, 144, 255, 1), renderSetting.ownedRegion().fillColor());
+        Assertions.assertEquals(new Color(0, 191, 255, 1), renderSetting.ownedRegion().outlineColor());
+        Assertions.assertEquals(new Color(30, 144, 255, 1), renderSetting.unownedRegion().fillColor());
+        Assertions.assertEquals(new Color(0, 255, 0, 1), renderSetting.unownedRegion().outlineColor());
         Assertions.assertEquals("""
                 <h2 style="color:#00bfff;text-align:center;margin-block-end:0.3em">{region_displayname}</h2>
                 <br/>
@@ -86,8 +91,56 @@ class ConfigTest {
             var path = this.tempDir.resolve("bundled-config.yml");
             Files.copy(input, path);
 
-            Assertions.assertDoesNotThrow(() -> Config.loadFromYamlFile(path));
+            var config = Assertions.assertDoesNotThrow(() -> Config.loadFromYamlFile(path));
+            Assertions.assertEquals(new Color("#ff0000ff"), config.worldBorderSetting().outlineColor());
+
+            var renderSetting = config.worldGuardSetting().worldSettingMap().get("default").renderSetting();
+            Assertions.assertEquals(new Color("#1e90ff1a"), renderSetting.ownedRegion().fillColor());
+            Assertions.assertEquals(new Color("#00ff004d"), renderSetting.unownedRegion().outlineColor());
         }
+    }
+
+    @Test
+    void testLoadRejectsMissingTopLevelSection() {
+        var yaml = MINIMAL_CONFIG.replace("""
+                world-border-setting:
+                  marker-set:
+                    name: Border
+                """, "");
+
+        Assertions.assertThrows(ConfigurateException.class, () -> this.load(yaml));
+    }
+
+    @Test
+    void testLoadRejectsMissingMarkerSetName() {
+        var yaml = MINIMAL_CONFIG.replace("    name: Border\n", "");
+
+        Assertions.assertThrows(ConfigurateException.class, () -> this.load(yaml));
+    }
+
+    @Test
+    void testLoadRejectsMissingRenderSetting() {
+        var yaml = MINIMAL_CONFIG.replace("""
+                      render-setting:
+                        owned-region: {}
+                        unowned-region: {}
+                """, "");
+
+        Assertions.assertThrows(ConfigurateException.class, () -> this.load(yaml));
+    }
+
+    @Test
+    void testLoadRejectsMissingOwnedRegion() {
+        var yaml = MINIMAL_CONFIG.replace("        owned-region: {}\n", "");
+
+        Assertions.assertThrows(ConfigurateException.class, () -> this.load(yaml));
+    }
+
+    @Test
+    void testLoadRejectsMissingSeparationSetting() {
+        var yaml = MINIMAL_CONFIG.replace("      separation-setting: {}\n", "");
+
+        Assertions.assertThrows(ConfigurateException.class, () -> this.load(yaml));
     }
 
     @Test
@@ -97,7 +150,7 @@ class ConfigTest {
                 "  marker-set:\n    name: Border\n  update-interval: 0\n"
         );
 
-        Assertions.assertThrows(IOException.class, () -> this.load(yaml));
+        Assertions.assertThrows(ConfigurateException.class, () -> this.load(yaml));
     }
 
     @Test
@@ -107,7 +160,7 @@ class ConfigTest {
                 "    default:\n      update-interval: -1\n      render-setting:"
         );
 
-        Assertions.assertThrows(IOException.class, () -> this.load(yaml));
+        Assertions.assertThrows(ConfigurateException.class, () -> this.load(yaml));
     }
 
     @Test
@@ -117,7 +170,7 @@ class ConfigTest {
                 "    default:\n      update-limit: 0\n      render-setting:"
         );
 
-        Assertions.assertThrows(IOException.class, () -> this.load(yaml));
+        Assertions.assertThrows(ConfigurateException.class, () -> this.load(yaml));
     }
 
     @Test
@@ -127,7 +180,7 @@ class ConfigTest {
                 "      separation-setting:\n        size: 0"
         );
 
-        Assertions.assertThrows(IOException.class, () -> this.load(yaml));
+        Assertions.assertThrows(ConfigurateException.class, () -> this.load(yaml));
     }
 
     @Test
@@ -137,7 +190,7 @@ class ConfigTest {
                 "      separation-setting:\n        center-size: -1"
         );
 
-        Assertions.assertThrows(IOException.class, () -> this.load(yaml));
+        Assertions.assertThrows(ConfigurateException.class, () -> this.load(yaml));
     }
 
     @Test
@@ -147,7 +200,7 @@ class ConfigTest {
                 "  marker-set:\n    name: Border\n  outline-color: not-a-color\n"
         );
 
-        Assertions.assertThrows(IOException.class, () -> this.load(yaml));
+        Assertions.assertThrows(ConfigurateException.class, () -> this.load(yaml));
     }
 
     private Config load(String yaml) throws IOException {
