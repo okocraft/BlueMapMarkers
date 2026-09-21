@@ -7,12 +7,21 @@ import dev.siroshun.codec4j.api.decoder.collection.MapDecoder;
 import dev.siroshun.codec4j.api.decoder.collection.SetDecoder;
 import dev.siroshun.codec4j.api.decoder.object.FieldDecoder;
 import dev.siroshun.codec4j.api.decoder.object.ObjectDecoder;
+import dev.siroshun.codec4j.api.error.DecodeError;
+import dev.siroshun.jfun.result.Result;
 
 import java.util.Map;
 import java.util.Set;
 
 public record WorldGuardSetting(boolean enabled, MarkerSetSetting markerSetSetting,
                                 Map<String, WorldSetting> worldSettingMap) {
+
+    private static final Decoder<Integer> POSITIVE_INT_DECODER = Codec.INT.flatMap(value ->
+            value > 0 ? Result.success(value) : DecodeError.failure("Expected a positive integer").asFailure()
+    );
+    private static final Decoder<Integer> NON_NEGATIVE_INT_DECODER = Codec.INT.flatMap(value ->
+            value >= 0 ? Result.success(value) : DecodeError.failure("Expected a non-negative integer").asFailure()
+    );
 
     static final Decoder<WorldGuardSetting> DECODER = ObjectDecoder.create(
             WorldGuardSetting::new,
@@ -27,8 +36,8 @@ public record WorldGuardSetting(boolean enabled, MarkerSetSetting markerSetSetti
                 WorldSetting::new,
                 FieldDecoder.optional("enabled", Codec.BOOLEAN, true),
                 FieldDecoder.optional("disabled-maps", SetDecoder.create(Codec.STRING), Set.of()),
-                FieldDecoder.optional("update-interval", Codec.INT, 10),
-                FieldDecoder.optional("update-limit", Codec.INT, 50),
+                FieldDecoder.optional("update-interval", NON_NEGATIVE_INT_DECODER, 10),
+                FieldDecoder.optional("update-limit", POSITIVE_INT_DECODER, 50),
                 FieldDecoder.required("render-setting", RenderSetting.DECODER),
                 FieldDecoder.required("separation-setting", SeparationSetting.DECODER)
         );
@@ -80,8 +89,8 @@ public record WorldGuardSetting(boolean enabled, MarkerSetSetting markerSetSetti
                 SeparationSetting::new,
                 FieldDecoder.optional("enabled", Codec.BOOLEAN, true),
                 FieldDecoder.optional("label-format", Codec.STRING, "WorldGuard (%min% ~ %max%)"),
-                FieldDecoder.optional("size", Codec.INT, 3),
-                FieldDecoder.optional("center-size", Codec.INT, 500)
+                FieldDecoder.optional("size", POSITIVE_INT_DECODER, 3),
+                FieldDecoder.optional("center-size", NON_NEGATIVE_INT_DECODER, 500)
         );
 
     }

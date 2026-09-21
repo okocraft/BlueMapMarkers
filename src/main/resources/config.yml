@@ -44,4 +44,3 @@ world-guard-setting:
         enabled: false
         label-format: 'WorldGuard (%min% ~ %max%)'
         size: 3
-        sorting: 0
