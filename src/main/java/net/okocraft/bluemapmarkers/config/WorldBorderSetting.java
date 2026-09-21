@@ -12,15 +12,15 @@ import java.util.Set;
 @ConfigSerializable
 public final class WorldBorderSetting {
 
-    private boolean enabled = true;
+    public boolean enabled = true;
     @Required
     @Setting("marker-set")
-    private MarkerSetSetting markerSetSetting;
-    private String label = "World Border";
-    private Color outlineColor = new Color(255, 0, 0, 1);
-    private float height = 63f;
-    private int updateInterval = 15;
-    private Set<String> disabledWorlds = Set.of();
+    public MarkerSetSetting markerSetSetting;
+    public String label = "World Border";
+    public Color outlineColor = new Color(255, 0, 0, 1);
+    public float height = 63f;
+    public int updateInterval = 15;
+    public Set<String> disabledWorlds = Set.of();
 
     public WorldBorderSetting() {
     }
@@ -41,34 +41,6 @@ public final class WorldBorderSetting {
         this.height = height;
         this.updateInterval = updateInterval;
         this.disabledWorlds = disabledWorlds;
-    }
-
-    public boolean enabled() {
-        return this.enabled;
-    }
-
-    public MarkerSetSetting markerSetSetting() {
-        return this.markerSetSetting;
-    }
-
-    public String label() {
-        return this.label;
-    }
-
-    public Color outlineColor() {
-        return this.outlineColor;
-    }
-
-    public float height() {
-        return this.height;
-    }
-
-    public int updateInterval() {
-        return this.updateInterval;
-    }
-
-    public Set<String> disabledWorlds() {
-        return this.disabledWorlds;
     }
 
     @PostProcess
