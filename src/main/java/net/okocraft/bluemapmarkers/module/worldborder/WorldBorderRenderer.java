@@ -31,7 +31,7 @@ class WorldBorderRenderer implements Listener {
 
     WorldBorderRenderer(@NotNull WorldBorderSetting setting, @NotNull UUID worldUid) {
         this.setting = setting;
-        this.markerSet = setting.markerSetSetting().createMarkerSet();
+        this.markerSet = setting.markerSetSetting.createMarkerSet();
         this.worldUid = worldUid;
     }
 
@@ -88,12 +88,12 @@ class WorldBorderRenderer implements Listener {
 
     private void updateMarker() {
         var newMarker = new ShapeMarker(
-                this.markerId, this.createCenter(), this.createShape(), this.setting.height()
+                this.markerId, this.createCenter(), this.createShape(), this.setting.height
         );
-        newMarker.setLineColor(this.setting.outlineColor());
+        newMarker.setLineColor(this.setting.outlineColor);
         newMarker.setFillColor(new Color(0, 0, 0, 0));
-        newMarker.setLabel(this.setting.label());
-        newMarker.setDetail(this.setting.label());
+        newMarker.setLabel(this.setting.label);
+        newMarker.setDetail(this.setting.label);
         newMarker.setDepthTestEnabled(false);
         newMarker.setMinDistance(0);
         newMarker.setMaxDistance(Double.MAX_VALUE);
@@ -112,6 +112,6 @@ class WorldBorderRenderer implements Listener {
     }
 
     private @NotNull Vector3d createCenter() {
-        return new Vector3d(this.centerX, this.setting.height(), this.centerZ);
+        return new Vector3d(this.centerX, this.setting.height, this.centerZ);
     }
 }
