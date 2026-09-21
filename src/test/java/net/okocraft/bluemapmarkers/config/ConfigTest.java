@@ -63,7 +63,12 @@ class ConfigTest {
 
         var renderSetting = worldSetting.renderSetting();
         Assertions.assertTrue(renderSetting.defaultRender());
-        Assertions.assertEquals("WorldGuard (%min% ~ %max%)", renderSetting.detailFormat());
+        Assertions.assertEquals("""
+                <h2 style="color:#00bfff;text-align:center;margin-block-end:0.3em">{region_displayname}</h2>
+                <br/>
+                <span style="font-size:100%;">Owners: </span><span style="font-weight:bold;">{region_owners}</span><br/>
+                <span style="font-size:100%;">Members: </span><span style="font-weight:bold;">{region_members}</span><br/>
+                """.strip(), renderSetting.detailFormat());
         Assertions.assertTrue(renderSetting.render3D());
         Assertions.assertEquals(63f, renderSetting.height());
         Assertions.assertEquals(0d, renderSetting.minDistance());
