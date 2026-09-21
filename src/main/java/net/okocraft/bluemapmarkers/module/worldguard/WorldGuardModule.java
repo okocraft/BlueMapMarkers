@@ -56,6 +56,18 @@ public class WorldGuardModule implements MarkerModule, Listener {
     @Override
     public void stop() {
         this.started = false;
+
+        var api = BlueMapAPI.getInstance().orElse(null);
+        if (api != null) {
+            for (var map : api.getMaps()) {
+                for (var worldUid : this.scheduledTasks.keySet()) {
+                    var markerSetId = "WorldGuard-" + worldUid;
+                    map.getMarkerSets().remove(markerSetId);
+                    map.getMarkerSets().keySet().removeIf(id -> id.startsWith(markerSetId + "_"));
+                }
+            }
+        }
+
         this.scheduledTasks.values().forEach(ScheduledTask::cancel);
         this.scheduledTasks.clear();
     }
