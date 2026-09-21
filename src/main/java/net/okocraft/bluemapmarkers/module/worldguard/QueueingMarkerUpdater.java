@@ -57,7 +57,8 @@ class QueueingMarkerUpdater {
     private void finishUpdate(@NotNull WorldGuardRenderer renderer) {
         renderer.removeRegions(this.removedRegions);
         this.renderedRegions.removeAll(this.removedRegions);
-        this.removedRegions.clear();
+        this.regionIdQueue = null;
+        this.removedRegions = null;
     }
 
     boolean isFinished() {
