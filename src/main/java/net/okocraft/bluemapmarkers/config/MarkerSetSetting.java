@@ -3,18 +3,17 @@ package net.okocraft.bluemapmarkers.config;
 import de.bluecolored.bluemap.api.markers.MarkerSet;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
-import org.spongepowered.configurate.objectmapping.meta.Setting;
+import org.spongepowered.configurate.objectmapping.meta.Required;
 
 import java.util.Set;
 
 @ConfigSerializable
 public final class MarkerSetSetting {
 
-    private String name = "";
-    @Setting("default-hidden")
+    @Required
+    private String name;
     private boolean defaultHidden = false;
     private int sorting = 0;
-    @Setting("disabled-maps")
     private Set<String> disabledMaps = Set.of();
 
     public MarkerSetSetting() {
