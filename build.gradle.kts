@@ -45,6 +45,7 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.11.4"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation(libs.worldguard)
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 tasks.test {
@@ -53,7 +54,7 @@ tasks.test {
     }
 }
 
-val loadTest by tasks.registering(Test::class) {
+tasks.register<Test>("loadTest") {
     description = "Runs the component load tests."
     group = LifecycleBasePlugin.VERIFICATION_GROUP
     testClassesDirs = sourceSets.test.get().output.classesDirs
