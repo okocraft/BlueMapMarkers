@@ -58,7 +58,7 @@ final class RegionRenderer {
     // Optimized: Reduce object creations (List copies, BlockVector2 -> Vector2d, and more...)
 
     private static double cross(BlockVector2 p1, BlockVector2 p2) {
-        return p1.x() * p2.z() - p1.z() * p2.x();
+        return (double) p1.x() * p2.z() - (double) p1.z() * p2.x();
     }
 
     private static Vector2d[] expandPolygonXZByOne(ImmutableList<BlockVector2> points) {
