@@ -2,7 +2,10 @@ package net.okocraft.bluemapmarkers.config;
 
 import de.bluecolored.bluemap.api.math.Color;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
+import org.spongepowered.configurate.objectmapping.meta.PostProcess;
+import org.spongepowered.configurate.objectmapping.meta.Required;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
+import org.spongepowered.configurate.serialize.SerializationException;
 
 import java.util.Map;
 import java.util.Set;
@@ -11,10 +14,11 @@ import java.util.Set;
 public final class WorldGuardSetting {
 
     private boolean enabled = true;
+    @Required
     @Setting("marker-set")
-    private MarkerSetSetting markerSetSetting = new MarkerSetSetting("WorldGuard", false, 0, Set.of());
-    @Setting("world-setting-map")
-    private Map<String, WorldSetting> worldSettingMap = Map.of("default", new WorldSetting());
+    private MarkerSetSetting markerSetSetting;
+    @Required
+    private Map<String, WorldSetting> worldSettingMap;
 
     public WorldGuardSetting() {
     }
@@ -41,35 +45,17 @@ public final class WorldGuardSetting {
         return this.worldSettingMap;
     }
 
-    void validate() {
-        if (this.worldSettingMap == null) {
-            throw new IllegalArgumentException("world-guard-setting.world-setting-map must not be null");
-        }
-
-        for (var entry : this.worldSettingMap.entrySet()) {
-            if (entry.getValue() == null) {
-                throw new IllegalArgumentException(
-                        "world-guard-setting.world-setting-map." + entry.getKey() + " must not be null"
-                );
-            }
-            entry.getValue().validate("world-guard-setting.world-setting-map." + entry.getKey());
-        }
-    }
-
     @ConfigSerializable
     public static final class WorldSetting {
 
         private boolean enabled = true;
-        @Setting("disabled-maps")
         private Set<String> disabledMaps = Set.of();
-        @Setting("update-interval")
         private int updateInterval = 10;
-        @Setting("update-limit")
         private int updateLimit = 50;
-        @Setting("render-setting")
-        private RenderSetting renderSetting = new RenderSetting();
-        @Setting("separation-setting")
-        private SeparationSetting separationSetting = new SeparationSetting();
+        @Required
+        private RenderSetting renderSetting;
+        @Required
+        private SeparationSetting separationSetting;
 
         public WorldSetting() {
         }
@@ -114,22 +100,14 @@ public final class WorldGuardSetting {
             return this.separationSetting;
         }
 
-        private void validate(String path) {
+        @PostProcess
+        private void validate() throws SerializationException {
             if (this.updateInterval < 0) {
-                throw new IllegalArgumentException(path + ".update-interval must be a non-negative integer");
+                throw new SerializationException("update-interval must be a non-negative integer");
             }
             if (this.updateLimit <= 0) {
-                throw new IllegalArgumentException(path + ".update-limit must be a positive integer");
+                throw new SerializationException("update-limit must be a positive integer");
             }
-            if (this.renderSetting == null) {
-                throw new IllegalArgumentException(path + ".render-setting must not be null");
-            }
-            if (this.separationSetting == null) {
-                throw new IllegalArgumentException(path + ".separation-setting must not be null");
-            }
-
-            this.renderSetting.validate();
-            this.separationSetting.validate(path + ".separation-setting");
         }
     }
 
@@ -143,13 +121,8 @@ public final class WorldGuardSetting {
     @ConfigSerializable
     public static final class OwnedRegionColor implements RegionColor {
 
-        @Setting("fill-color")
-        private String fillColorValue = "#1e90ffff";
-        @Setting("outline-color")
-        private String outlineColorValue = "#00bfffff";
-
-        private transient Color fillColor;
-        private transient Color outlineColor;
+        private Color fillColor = new Color(30, 144, 255, 1);
+        private Color outlineColor = new Color(0, 191, 255, 1);
 
         public OwnedRegionColor() {
         }
@@ -161,36 +134,20 @@ public final class WorldGuardSetting {
 
         @Override
         public Color fillColor() {
-            if (this.fillColor == null) {
-                this.fillColor = new Color(this.fillColorValue);
-            }
             return this.fillColor;
         }
 
         @Override
         public Color outlineColor() {
-            if (this.outlineColor == null) {
-                this.outlineColor = new Color(this.outlineColorValue);
-            }
             return this.outlineColor;
-        }
-
-        private void validate() {
-            this.fillColor();
-            this.outlineColor();
         }
     }
 
     @ConfigSerializable
     public static final class UnownedRegionColor implements RegionColor {
 
-        @Setting("fill-color")
-        private String fillColorValue = "#1e90ffff";
-        @Setting("outline-color")
-        private String outlineColorValue = "#00ff00ff";
-
-        private transient Color fillColor;
-        private transient Color outlineColor;
+        private Color fillColor = new Color(30, 144, 255, 1);
+        private Color outlineColor = new Color(0, 255, 0, 1);
 
         public UnownedRegionColor() {
         }
@@ -202,36 +159,23 @@ public final class WorldGuardSetting {
 
         @Override
         public Color fillColor() {
-            if (this.fillColor == null) {
-                this.fillColor = new Color(this.fillColorValue);
-            }
             return this.fillColor;
         }
 
         @Override
         public Color outlineColor() {
-            if (this.outlineColor == null) {
-                this.outlineColor = new Color(this.outlineColorValue);
-            }
             return this.outlineColor;
-        }
-
-        private void validate() {
-            this.fillColor();
-            this.outlineColor();
         }
     }
 
     @ConfigSerializable
     public static final class RenderSetting {
 
-        @Setting("default-render")
         private boolean defaultRender = true;
-        @Setting("owned-region")
-        private OwnedRegionColor ownedRegion = new OwnedRegionColor();
-        @Setting("unowned-region")
-        private UnownedRegionColor unownedRegion = new UnownedRegionColor();
-        @Setting("detail-format")
+        @Required
+        private OwnedRegionColor ownedRegion;
+        @Required
+        private UnownedRegionColor unownedRegion;
         private String detailFormat = """
                 <h2 style="color:#00bfff;text-align:center;margin-block-end:0.3em">{region_displayname}</h2>
                 <br/>
@@ -241,9 +185,7 @@ public final class WorldGuardSetting {
         @Setting("render-3d")
         private boolean render3D = true;
         private float height = 63f;
-        @Setting("min-distance")
         private double minDistance = 0d;
-        @Setting("max-distance")
         private double maxDistance = 1000d;
 
         public RenderSetting() {
@@ -300,28 +242,14 @@ public final class WorldGuardSetting {
         public double maxDistance() {
             return this.maxDistance;
         }
-
-        private void validate() {
-            if (this.ownedRegion == null) {
-                throw new IllegalArgumentException("owned-region must not be null");
-            }
-            if (this.unownedRegion == null) {
-                throw new IllegalArgumentException("unowned-region must not be null");
-            }
-
-            this.ownedRegion.validate();
-            this.unownedRegion.validate();
-        }
     }
 
     @ConfigSerializable
     public static final class SeparationSetting {
 
         private boolean enabled = true;
-        @Setting("label-format")
         private String labelFormat = "WorldGuard (%min% ~ %max%)";
         private int size = 3;
-        @Setting("center-size")
         private int centerSize = 500;
 
         public SeparationSetting() {
@@ -350,12 +278,13 @@ public final class WorldGuardSetting {
             return this.centerSize;
         }
 
-        private void validate(String path) {
+        @PostProcess
+        private void validate() throws SerializationException {
             if (this.size <= 0) {
-                throw new IllegalArgumentException(path + ".size must be a positive integer");
+                throw new SerializationException("size must be a positive integer");
             }
             if (this.centerSize < 0) {
-                throw new IllegalArgumentException(path + ".center-size must be a non-negative integer");
+                throw new SerializationException("center-size must be a non-negative integer");
             }
         }
     }
