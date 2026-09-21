@@ -11,6 +11,7 @@ import net.okocraft.bluemapmarkers.util.BlueMapWorldId;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
@@ -75,7 +76,7 @@ public class WorldGuardModule implements MarkerModule, Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     private void onWorldUnload(@NotNull WorldUnloadEvent event) {
         var worldUid = event.getWorld().getUID();
         var task = this.scheduledTasks.remove(worldUid);
