@@ -101,7 +101,15 @@ final class RegionRenderer {
 
             pointAdded.add(cur);
 
-            if (cross(cur.subtract(prev), next.subtract(cur)) == 0 && cur.subtract(prev).dot(next.subtract(cur)) < 0) {
+            int incomingX = cur.x() - prev.x();
+            int incomingZ = cur.z() - prev.z();
+            int outgoingX = next.x() - cur.x();
+            int outgoingZ = next.z() - cur.z();
+
+            double cross = (double) incomingX * outgoingZ - (double) incomingZ * outgoingX;
+            int dot = incomingX * outgoingX + incomingZ * outgoingZ;
+
+            if (cross == 0 && dot < 0) {
                 pointAdded.add(cur);
             }
         }
@@ -134,6 +142,10 @@ final class RegionRenderer {
         }
 
         return result;
+    }
+
+    static Vector2d[] expandPolygonXZByOneForBenchmark(ImmutableList<BlockVector2> points) {
+        return expandPolygonXZByOne(points);
     }
 
     /**
