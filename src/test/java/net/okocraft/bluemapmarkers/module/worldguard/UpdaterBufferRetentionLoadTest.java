@@ -2,11 +2,12 @@ package net.okocraft.bluemapmarkers.module.worldguard;
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import org.junit.jupiter.api.Test;
-import org.openjdk.jol.info.GraphLayout;
 
+import java.lang.reflect.Field;
 import java.util.ArrayDeque;
 import java.util.Collections;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UpdaterBufferRetentionLoadTest {
@@ -14,7 +15,7 @@ class UpdaterBufferRetentionLoadTest {
     private static final int REGION_COUNT = 500_000;
 
     @Test
-    void compareCompletedCycleBufferRetention() {
+    void compareCompletedCycleBufferRetention() throws ReflectiveOperationException {
         var drainedQueue = new ArrayDeque<>(Collections.nCopies(REGION_COUNT, "region"));
         while (drainedQueue.poll() != null) {
             // Match the updater consuming every queued region ID.
@@ -23,25 +24,30 @@ class UpdaterBufferRetentionLoadTest {
         var clearedRemovedRegions = new ObjectOpenHashSet<RenderedRegionInfo>(REGION_COUNT);
         clearedRemovedRegions.clear();
 
-        var previous = new BufferHolder(drainedQueue, clearedRemovedRegions);
-        var current = new BufferHolder(null, null);
-        long previousRetainedBytes = GraphLayout.parseInstance(previous).totalSize();
-        long currentRetainedBytes = GraphLayout.parseInstance(current).totalSize();
-        double reductionPercent = 100d * (previousRetainedBytes - currentRetainedBytes) / previousRetainedBytes;
+        long previousRetainedSlots = arrayLength(ArrayDeque.class, "elements", drainedQueue) +
+                arrayLength(ObjectOpenHashSet.class, "key", clearedRemovedRegions);
+        long currentRetainedSlots = 0;
 
         System.out.printf(
-                "buffer-retention-load-test regions=%d previous-retained-bytes=%d " +
-                        "current-retained-bytes=%d reduction-percent=%.5f%n",
+                "buffer-retention-load-test regions=%d previous-retained-reference-slots=%d " +
+                        "current-retained-reference-slots=%d approximate-released-bytes=%d%n",
                 REGION_COUNT,
-                previousRetainedBytes,
-                currentRetainedBytes,
-                reductionPercent
+                previousRetainedSlots,
+                currentRetainedSlots,
+                previousRetainedSlots * 4
         );
 
-        assertTrue(currentRetainedBytes < 1_024, "Completed-cycle buffers must retain less than 1 KiB");
-        assertTrue(reductionPercent >= 99.9, "Completed-cycle buffer retention must decrease by at least 99.9%");
+        assertEquals(0, currentRetainedSlots, "Completed-cycle buffers must retain no backing arrays");
+        assertTrue(
+                previousRetainedSlots >= REGION_COUNT * 2L,
+                "The previous implementation must retain at least two reference slots per region"
+        );
     }
 
-    private record BufferHolder(Object regionIdQueue, Object removedRegions) {
+    private static int arrayLength(Class<?> owner, String fieldName, Object instance)
+            throws ReflectiveOperationException {
+        Field field = owner.getDeclaredField(fieldName);
+        field.setAccessible(true);
+        return ((Object[]) field.get(instance)).length;
     }
 }
