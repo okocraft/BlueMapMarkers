@@ -80,34 +80,49 @@ abstract class WorldGuardRenderer {
         return RegionRenderer.render(region);
     }
 
-    protected @NotNull Marker createMarker(@NotNull ProtectedRegion region, @NotNull RegionRenderer.Result renderResult) {
+    protected @NotNull Marker createMarker(@Nullable Marker current, @NotNull ProtectedRegion region,
+                                            @NotNull RegionRenderer.Result renderResult) {
         boolean isOwned = region.hasMembersOrOwners();
         var outlineColor = getSpecifiedOrDefaultColor(region, OUTLINE_FLAG, isOwned ? this.ownedRegionColor.outlineColor() : this.unownedRegionColor.outlineColor());
         var fillColor = getSpecifiedOrDefaultColor(region, COLOR_FLAG, isOwned ? this.ownedRegionColor.fillColor() : this.unownedRegionColor.fillColor());
 
-        ObjectMarker.Builder<?, ?> builder;
+        ObjectMarker marker;
 
         if (this.setting.render3D()) {
-            builder = ExtrudeMarker.builder()
-                    .shape(renderResult.shape(), renderResult.minY(), renderResult.maxY())
-                    .lineColor(outlineColor)
-                    .fillColor(fillColor);
+            ExtrudeMarker extrudeMarker;
+            if (current instanceof ExtrudeMarker existing) {
+                extrudeMarker = existing;
+                extrudeMarker.setShape(renderResult.shape(), renderResult.minY(), renderResult.maxY());
+            } else {
+                extrudeMarker = new ExtrudeMarker(
+                        region.getId(), renderResult.shape(), renderResult.minY(), renderResult.maxY()
+                );
+            }
+            extrudeMarker.setColors(outlineColor, fillColor);
+            marker = extrudeMarker;
         } else {
-            builder = ShapeMarker.builder()
-                    .shape(renderResult.shape(), this.setting.height())
-                    .lineColor(outlineColor)
-                    .depthTestEnabled(false)
-                    .fillColor(fillColor);
+            ShapeMarker shapeMarker;
+            if (current instanceof ShapeMarker existing) {
+                shapeMarker = existing;
+                shapeMarker.setShape(renderResult.shape(), this.setting.height());
+            } else {
+                shapeMarker = new ShapeMarker(region.getId(), renderResult.shape(), this.setting.height());
+            }
+            shapeMarker.setColors(outlineColor, fillColor);
+            shapeMarker.setDepthTestEnabled(false);
+            marker = shapeMarker;
         }
 
         var position2d = renderResult.shape().getPoint(0);
 
-        return builder.label(region.getId())
-                .detail(this.detailFormatter.format(region))
-                .position(new Vector3d(position2d.getX(), ((double) (renderResult.minY() + renderResult.maxY()) / 2), position2d.getY()))
-                .minDistance(this.setting.minDistance())
-                .maxDistance(this.setting.maxDistance())
-                .build();
+        marker.setLabel(region.getId());
+        marker.setDetail(this.detailFormatter.format(region));
+        marker.setPosition(new Vector3d(
+                position2d.getX(), ((double) (renderResult.minY() + renderResult.maxY()) / 2), position2d.getY()
+        ));
+        marker.setMinDistance(this.setting.minDistance());
+        marker.setMaxDistance(this.setting.maxDistance());
+        return marker;
     }
 
     private static @NotNull Color getSpecifiedOrDefaultColor(@NotNull ProtectedRegion region, @NotNull StringFlag flag, @NotNull Color defaultColor) {
