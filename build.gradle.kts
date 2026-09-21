@@ -40,3 +40,15 @@ bundler {
 tasks.shadowJar {
     minimize()
 }
+
+dependencies {
+    testImplementation(platform("org.junit:junit-bom:5.11.4"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation(libs.bluemap)
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+tasks.test {
+    useJUnitPlatform()
+    testLogging.showStandardStreams = true
+}

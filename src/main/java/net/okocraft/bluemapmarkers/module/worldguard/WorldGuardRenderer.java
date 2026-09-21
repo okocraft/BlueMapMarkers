@@ -80,7 +80,7 @@ abstract class WorldGuardRenderer {
         return RegionRenderer.render(region);
     }
 
-    protected @NotNull Marker createMarker(@Nullable Marker current, @NotNull ProtectedRegion region,
+    protected @NotNull Marker createMarker(@NotNull ProtectedRegion region,
                                             @NotNull RegionRenderer.Result renderResult) {
         boolean isOwned = region.hasMembersOrOwners();
         var outlineColor = getSpecifiedOrDefaultColor(region, OUTLINE_FLAG, isOwned ? this.ownedRegionColor.outlineColor() : this.unownedRegionColor.outlineColor());
@@ -89,25 +89,13 @@ abstract class WorldGuardRenderer {
         ObjectMarker marker;
 
         if (this.setting.render3D()) {
-            ExtrudeMarker extrudeMarker;
-            if (current instanceof ExtrudeMarker existing) {
-                extrudeMarker = existing;
-                extrudeMarker.setShape(renderResult.shape(), renderResult.minY(), renderResult.maxY());
-            } else {
-                extrudeMarker = new ExtrudeMarker(
-                        region.getId(), renderResult.shape(), renderResult.minY(), renderResult.maxY()
-                );
-            }
+            var extrudeMarker = new ExtrudeMarker(
+                    region.getId(), renderResult.shape(), renderResult.minY(), renderResult.maxY()
+            );
             extrudeMarker.setColors(outlineColor, fillColor);
             marker = extrudeMarker;
         } else {
-            ShapeMarker shapeMarker;
-            if (current instanceof ShapeMarker existing) {
-                shapeMarker = existing;
-                shapeMarker.setShape(renderResult.shape(), this.setting.height());
-            } else {
-                shapeMarker = new ShapeMarker(region.getId(), renderResult.shape(), this.setting.height());
-            }
+            var shapeMarker = new ShapeMarker(region.getId(), renderResult.shape(), this.setting.height());
             shapeMarker.setColors(outlineColor, fillColor);
             shapeMarker.setDepthTestEnabled(false);
             marker = shapeMarker;
