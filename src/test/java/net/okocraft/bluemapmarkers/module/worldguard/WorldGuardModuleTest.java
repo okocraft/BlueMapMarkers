@@ -1,6 +1,8 @@
 package net.okocraft.bluemapmarkers.module.worldguard;
 
 import de.bluecolored.bluemap.api.BlueMapAPI;
+import de.bluecolored.bluemap.api.BlueMapMap;
+import de.bluecolored.bluemap.api.markers.MarkerSet;
 import de.bluecolored.bluemap.api.math.Color;
 import io.papermc.paper.threadedregions.scheduler.GlobalRegionScheduler;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
@@ -11,15 +13,19 @@ import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.plugin.PluginManager;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 class WorldGuardModuleTest {
 
@@ -152,6 +158,55 @@ class WorldGuardModuleTest {
                     Mockito.anyLong(),
                     Mockito.anyLong()
             );
+        }
+    }
+
+    @Test
+    void testScheduledTaskRemovesMarkerSetsAndCancelsWhenWorldDisappears() {
+        var plugin = Mockito.mock(BlueMapMarkersPlugin.class);
+        var pluginManager = Mockito.mock(PluginManager.class);
+        var scheduler = Mockito.mock(GlobalRegionScheduler.class);
+        var task = Mockito.mock(ScheduledTask.class);
+        var world = world("world", "minecraft:overworld");
+        var api = Mockito.mock(BlueMapAPI.class);
+        var map = Mockito.mock(BlueMapMap.class);
+        var markerSets = new HashMap<String, MarkerSet>();
+        markerSets.put("WorldGuard-" + WORLD_ID, new MarkerSet("stale"));
+        markerSets.put("WorldGuard-" + WORLD_ID + "_1", new MarkerSet("stale-separated"));
+        markerSets.put("unrelated", new MarkerSet("keep"));
+        Mockito.when(api.getMaps()).thenReturn(List.of(map));
+        Mockito.when(map.getMarkerSets()).thenReturn(markerSets);
+
+        var tick = new AtomicReference<Consumer<ScheduledTask>>();
+        Mockito.when(scheduler.runAtFixedRate(
+                Mockito.eq(plugin),
+                Mockito.any(),
+                Mockito.eq(20L),
+                Mockito.eq(20L)
+        )).thenAnswer(invocation -> {
+            tick.set(invocation.getArgument(1));
+            return task;
+        });
+
+        try (var bukkit = Mockito.mockStatic(Bukkit.class);
+             var blueMap = Mockito.mockStatic(BlueMapAPI.class)) {
+            bukkit.when(Bukkit::getPluginManager).thenReturn(pluginManager);
+            bukkit.when(Bukkit::getWorlds).thenReturn(List.of(world));
+            bukkit.when(Bukkit::getGlobalRegionScheduler).thenReturn(scheduler);
+            bukkit.when(() -> Bukkit.getWorld(WORLD_ID)).thenReturn(null);
+            blueMap.when(BlueMapAPI::getInstance).thenReturn(Optional.of(api));
+
+            var module = new WorldGuardModule(setting(Map.of("default", worldSetting(true))));
+            module.init(plugin);
+            module.start();
+
+            tick.get().accept(task);
+            module.stop();
+
+            Assertions.assertFalse(markerSets.containsKey("WorldGuard-" + WORLD_ID));
+            Assertions.assertFalse(markerSets.containsKey("WorldGuard-" + WORLD_ID + "_1"));
+            Assertions.assertTrue(markerSets.containsKey("unrelated"));
+            Mockito.verify(task, Mockito.times(1)).cancel();
         }
     }
 
