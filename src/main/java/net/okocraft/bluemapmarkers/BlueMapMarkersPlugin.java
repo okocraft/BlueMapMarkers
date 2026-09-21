@@ -81,11 +81,14 @@ public class BlueMapMarkersPlugin extends JavaPlugin {
     }
 
     private void onBlueMapEnable(@NotNull BlueMapAPI api) {
-        this.modules.forEach(MarkerModule::start);
+        this.getServer().getGlobalRegionScheduler().execute(
+                this,
+                () -> this.modules.forEach(MarkerModule::start)
+        );
     }
 
     private void onBlueMapDisable(@NotNull BlueMapAPI api) {
-        this.stopModules();
+        this.getServer().getGlobalRegionScheduler().execute(this, this::stopModules);
     }
 
     private void stopModules() {
