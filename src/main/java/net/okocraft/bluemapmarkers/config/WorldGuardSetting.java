@@ -74,7 +74,12 @@ public record WorldGuardSetting(boolean enabled, MarkerSetSetting markerSetSetti
                 FieldDecoder.optional("default-render", Codec.BOOLEAN, true),
                 FieldDecoder.required("owned-region", OwnedRegionColor.DECODER),
                 FieldDecoder.required("unowned-region", UnownedRegionColor.DECODER),
-                FieldDecoder.optional("detail-format", Codec.STRING, "WorldGuard (%min% ~ %max%)"),
+                FieldDecoder.optional("detail-format", Codec.STRING, """
+                        <h2 style="color:#00bfff;text-align:center;margin-block-end:0.3em">{region_displayname}</h2>
+                        <br/>
+                        <span style="font-size:100%;">Owners: </span><span style="font-weight:bold;">{region_owners}</span><br/>
+                        <span style="font-size:100%;">Members: </span><span style="font-weight:bold;">{region_members}</span><br/>
+                        """.strip()),
                 FieldDecoder.optional("render-3d", Codec.BOOLEAN, true),
                 FieldDecoder.optional("height", Codec.FLOAT, 63f),
                 FieldDecoder.optional("min-distance", Codec.DOUBLE, 0d),
