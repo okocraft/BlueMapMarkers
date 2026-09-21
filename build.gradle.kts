@@ -49,19 +49,5 @@ dependencies {
 }
 
 tasks.test {
-    useJUnitPlatform {
-        excludeTags("load")
-    }
-}
-
-tasks.register<Test>("loadTest") {
-    description = "Runs the component load tests."
-    group = LifecycleBasePlugin.VERIFICATION_GROUP
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    useJUnitPlatform {
-        includeTags("load")
-    }
-    outputs.upToDateWhen { false }
-    testLogging.showStandardStreams = true
+    useJUnitPlatform()
 }
