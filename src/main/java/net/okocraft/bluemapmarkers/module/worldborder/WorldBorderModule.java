@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 public class WorldBorderModule implements MarkerModule {
 
@@ -36,12 +35,11 @@ public class WorldBorderModule implements MarkerModule {
 
     @Override
     public void start() {
-        this.updateTask = Bukkit.getAsyncScheduler().runAtFixedRate(
+        this.updateTask = Bukkit.getGlobalRegionScheduler().runAtFixedRate(
                 this.plugin,
                 ignored -> this.doUpdate(),
-                3,
-                this.setting.updateInterval(),
-                TimeUnit.SECONDS
+                60L,
+                this.setting.updateInterval() * 20L
         );
     }
 

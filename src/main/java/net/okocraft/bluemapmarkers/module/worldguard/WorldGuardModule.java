@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class WorldGuardModule implements MarkerModule {
@@ -52,10 +51,10 @@ public class WorldGuardModule implements MarkerModule {
                                 new SeparatingWorldGuardRenderer(worldSetting, this.setting.markerSetSetting()) :
                                 new DefaultWorldGuardRenderer(worldSetting, this.setting.markerSetSetting());
 
-                this.scheduledTasks.add(Bukkit.getAsyncScheduler().runAtFixedRate(
+                this.scheduledTasks.add(Bukkit.getGlobalRegionScheduler().runAtFixedRate(
                         this.plugin,
                         new PerWorldTask(world.getUID(), renderer, worldSetting),
-                        1L, 1L, TimeUnit.SECONDS));
+                        20L, 20L));
             }
         }
     }
