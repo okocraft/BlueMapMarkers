@@ -2,7 +2,10 @@ package net.okocraft.bluemapmarkers.config;
 
 import de.bluecolored.bluemap.api.math.Color;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
+import org.spongepowered.configurate.objectmapping.meta.PostProcess;
+import org.spongepowered.configurate.objectmapping.meta.Required;
 import org.spongepowered.configurate.objectmapping.meta.Setting;
+import org.spongepowered.configurate.serialize.SerializationException;
 
 import java.util.Set;
 
@@ -10,18 +13,14 @@ import java.util.Set;
 public final class WorldBorderSetting {
 
     private boolean enabled = true;
+    @Required
     @Setting("marker-set")
-    private MarkerSetSetting markerSetSetting = new MarkerSetSetting("World Border", false, 0, Set.of());
+    private MarkerSetSetting markerSetSetting;
     private String label = "World Border";
-    @Setting("outline-color")
-    private String outlineColorValue = "#ff0000ff";
+    private Color outlineColor = new Color(255, 0, 0, 1);
     private float height = 63f;
-    @Setting("update-interval")
     private int updateInterval = 15;
-    @Setting("disabled-worlds")
     private Set<String> disabledWorlds = Set.of();
-
-    private transient Color outlineColor;
 
     public WorldBorderSetting() {
     }
@@ -57,9 +56,6 @@ public final class WorldBorderSetting {
     }
 
     public Color outlineColor() {
-        if (this.outlineColor == null) {
-            this.outlineColor = new Color(this.outlineColorValue);
-        }
         return this.outlineColor;
     }
 
@@ -75,10 +71,10 @@ public final class WorldBorderSetting {
         return this.disabledWorlds;
     }
 
-    void validate() {
+    @PostProcess
+    private void validate() throws SerializationException {
         if (this.updateInterval <= 0) {
-            throw new IllegalArgumentException("world-border-setting.update-interval must be a positive integer");
+            throw new SerializationException("update-interval must be a positive integer");
         }
-        this.outlineColor();
     }
 }
