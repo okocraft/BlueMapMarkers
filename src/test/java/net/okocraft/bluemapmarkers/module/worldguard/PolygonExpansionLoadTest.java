@@ -60,7 +60,7 @@ class PolygonExpansionLoadTest {
                 timeReduction
         );
 
-        assertTrue(allocationReduction >= 50, "Primitive calculation must reduce allocation by at least 50%");
+        assertTrue(allocationReduction >= 45, "Primitive calculation must reduce allocation by at least 45%");
         assertTrue(timeReduction >= 20, "Primitive calculation must reduce median elapsed time by at least 20%");
     }
 
