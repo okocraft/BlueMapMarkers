@@ -21,7 +21,7 @@ class DefaultWorldGuardRenderer extends WorldGuardRenderer {
     }
 
     @Override
-    @Nullable RenderedRegionInfo renderRegion(@NotNull ProtectedRegion region) {
+    public @Nullable RenderedRegionInfo renderRegion(@NotNull ProtectedRegion region) {
         var renderResult = super.renderIfNeeded(region);
 
         if (renderResult != null) {
@@ -39,7 +39,7 @@ class DefaultWorldGuardRenderer extends WorldGuardRenderer {
     }
 
     @Override
-    void removeRegions(@NotNull Collection<RenderedRegionInfo> regions) {
+    public void removeRegions(@NotNull Collection<RenderedRegionInfo> regions) {
         for (var region : regions) {
             this.markerSet.remove(region.markerId());
         }

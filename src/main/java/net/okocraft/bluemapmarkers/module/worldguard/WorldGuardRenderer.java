@@ -19,7 +19,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
 import java.util.UUID;
 
-abstract class WorldGuardRenderer {
+abstract class WorldGuardRenderer implements RegionUpdateRenderer {
 
     private static final StateFlag RENDER_FLAG = register(new StateFlag("render-on-bluemap", true), StateFlag.class);
     private static final StringFlag COLOR_FLAG = register(new StringFlag("bluemap-color"), StringFlag.class);
@@ -62,11 +62,11 @@ abstract class WorldGuardRenderer {
         this.detailFormatter = DetailFormatter.compile(this.setting.detailFormat());
     }
 
-    abstract @Nullable RenderedRegionInfo renderRegion(@NotNull ProtectedRegion region);
+    public abstract @Nullable RenderedRegionInfo renderRegion(@NotNull ProtectedRegion region);
 
     abstract void putMarkerSets(@NotNull UUID worldUid, @NotNull BlueMapMap target);
 
-    abstract void removeRegions(@NotNull Collection<RenderedRegionInfo> regions);
+    public abstract void removeRegions(@NotNull Collection<RenderedRegionInfo> regions);
 
     @NotNull String createMarkerId(@NotNull ProtectedRegion region) {
         return "WorldGuard-" + region.getId();

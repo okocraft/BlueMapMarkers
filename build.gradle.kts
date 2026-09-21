@@ -40,3 +40,27 @@ bundler {
 tasks.shadowJar {
     minimize()
 }
+
+dependencies {
+    testImplementation(platform("org.junit:junit-bom:5.11.4"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation(libs.worldguard)
+}
+
+tasks.test {
+    useJUnitPlatform {
+        excludeTags("load")
+    }
+}
+
+val loadTest by tasks.registering(Test::class) {
+    description = "Runs the component load tests."
+    group = LifecycleBasePlugin.VERIFICATION_GROUP
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    useJUnitPlatform {
+        includeTags("load")
+    }
+    outputs.upToDateWhen { false }
+    testLogging.showStandardStreams = true
+}

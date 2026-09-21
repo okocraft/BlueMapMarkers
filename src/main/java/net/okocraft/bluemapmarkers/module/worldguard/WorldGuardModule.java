@@ -175,9 +175,10 @@ public class WorldGuardModule implements MarkerModule, Listener {
 
             if (this.updater.isFinished()) { // If the updater is completed in previous process, reset cooldown
                 this.cooldown = this.setting.updateInterval();
+                this.updater.beginUpdate(regionManager.getRegions().values());
             }
 
-            boolean finished = this.updater.doUpdate(this.renderer, regionManager);
+            boolean finished = this.updater.doUpdate(this.renderer);
 
             for (var map : blueMapWorld.get().getMaps()) {
                 if (!this.setting.disabledMaps().contains(map.getId())) {

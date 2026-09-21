@@ -31,7 +31,7 @@ class SeparatingWorldGuardRenderer extends WorldGuardRenderer {
         this.length = Math.max(1, worldSetting.separationSetting().size());
     }
 
-    @Nullable RenderedRegionInfo renderRegion(@NotNull ProtectedRegion region) {
+    public @Nullable RenderedRegionInfo renderRegion(@NotNull ProtectedRegion region) {
         var renderResult = super.renderIfNeeded(region);
 
         if (renderResult == null) {
@@ -69,7 +69,7 @@ class SeparatingWorldGuardRenderer extends WorldGuardRenderer {
     }
 
     @Override
-    void removeRegions(@NotNull Collection<RenderedRegionInfo> regions) {
+    public void removeRegions(@NotNull Collection<RenderedRegionInfo> regions) {
         for (var region : regions) {
             var markerSet = this.separatedMarkerSetMap.get(region.markerSetKey());
 
