@@ -31,6 +31,9 @@ class DetailFormatter {
                 builder.append(c);
             }
         }
+        if (!builder.isEmpty()) {
+            parts.add(createPart(builder.toString()));
+        }
         return new DetailFormatter(parts);
     }
 
