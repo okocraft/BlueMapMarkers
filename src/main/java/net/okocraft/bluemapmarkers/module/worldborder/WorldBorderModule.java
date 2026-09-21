@@ -8,7 +8,10 @@ import net.okocraft.bluemapmarkers.module.MarkerModule;
 import net.okocraft.bluemapmarkers.util.BlueMapWorldId;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
+import org.bukkit.event.world.WorldUnloadEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -16,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class WorldBorderModule implements MarkerModule {
+public class WorldBorderModule implements MarkerModule, Listener {
 
     private final WorldBorderSetting setting;
     private final Map<UUID, WorldBorderRenderer> rendererMap = new HashMap<>();
@@ -31,6 +34,7 @@ public class WorldBorderModule implements MarkerModule {
     @Override
     public void init(@NotNull BlueMapMarkersPlugin plugin) {
         this.plugin = plugin;
+        Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
     @Override
@@ -52,6 +56,30 @@ public class WorldBorderModule implements MarkerModule {
 
         this.rendererMap.values().forEach(HandlerList::unregisterAll);
         this.rendererMap.clear();
+    }
+
+    @EventHandler
+    private void onWorldUnload(@NotNull WorldUnloadEvent event) {
+        var world = event.getWorld();
+        var renderer = this.rendererMap.remove(world.getUID());
+
+        if (renderer != null) {
+            HandlerList.unregisterAll(renderer);
+        }
+
+        var api = BlueMapAPI.getInstance().orElse(null);
+        if (api == null) {
+            return;
+        }
+
+        var blueMapWorld = api.getWorld(world.getUID()).or(() ->
+                api.getWorld(BlueMapWorldId.create(world.getWorldPath(), world.getEnvironment()))
+        );
+
+        blueMapWorld.ifPresent(value -> {
+            var markerSetId = "WorldBorder-" + world.getUID();
+            value.getMaps().forEach(map -> map.getMarkerSets().remove(markerSetId));
+        });
     }
 
     private void doUpdate() {
