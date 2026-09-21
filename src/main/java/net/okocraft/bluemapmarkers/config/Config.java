@@ -36,9 +36,10 @@ public final class Config {
     public static @NotNull Config loadFromYamlFile(@NotNull Path filepath) throws IOException {
         var loader = YamlConfigurationLoader.builder()
                 .path(filepath)
-                .defaultOptions(options -> options.serializers(serializers ->
-                        serializers.registerExact(Color.class, ColorSerializer.INSTANCE)
-                ))
+                .defaultOptions(options -> options.serializers(serializers -> {
+                    serializers.registerExact(Color.class, ColorSerializer.INSTANCE);
+                    serializers.registerExact(Integer.class, IntegerSerializer.INSTANCE);
+                }))
                 .build();
 
         return loader.load().require(Config.class);
