@@ -74,4 +74,11 @@ public final class WorldBorderSetting {
     public Set<String> disabledWorlds() {
         return this.disabledWorlds;
     }
+
+    void validate() {
+        if (this.updateInterval <= 0) {
+            throw new IllegalArgumentException("world-border-setting.update-interval must be a positive integer");
+        }
+        this.outlineColor();
+    }
 }
