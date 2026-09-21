@@ -9,20 +9,26 @@ import net.okocraft.bluemapmarkers.config.WorldGuardSetting;
 import net.okocraft.bluemapmarkers.module.MarkerModule;
 import net.okocraft.bluemapmarkers.util.BlueMapWorldId;
 import org.bukkit.Bukkit;
+import org.bukkit.World;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.world.WorldLoadEvent;
+import org.bukkit.event.world.WorldUnloadEvent;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
-public class WorldGuardModule implements MarkerModule {
+public class WorldGuardModule implements MarkerModule, Listener {
 
     private final WorldGuardSetting setting;
-    private final List<ScheduledTask> scheduledTasks = new ArrayList<>();
+    private final ConcurrentHashMap<UUID, ScheduledTask> scheduledTasks = new ConcurrentHashMap<>();
 
     private BlueMapMarkersPlugin plugin;
+    private volatile boolean started;
 
     public WorldGuardModule(@NotNull WorldGuardSetting setting) {
         this.setting = setting;
@@ -36,33 +42,62 @@ public class WorldGuardModule implements MarkerModule {
     public void init(@NotNull BlueMapMarkersPlugin plugin) {
         this.plugin = plugin;
         PerWorldTask.logger = plugin.getSLF4JLogger();
+        Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
     @Override
     public void start() {
-        var worldSettingMap = this.setting.worldSettingMap();
-
+        this.started = true;
         for (var world : List.copyOf(Bukkit.getWorlds())) {
-            var worldSetting = worldSettingMap.getOrDefault(world.getName(), worldSettingMap.getOrDefault(world.getKey().asString(), worldSettingMap.get("default")));
-
-            if (worldSetting.enabled()) {
-                WorldGuardRenderer renderer =
-                        worldSetting.separationSetting().enabled() ?
-                                new SeparatingWorldGuardRenderer(worldSetting, this.setting.markerSetSetting()) :
-                                new DefaultWorldGuardRenderer(worldSetting, this.setting.markerSetSetting());
-
-                this.scheduledTasks.add(Bukkit.getGlobalRegionScheduler().runAtFixedRate(
-                        this.plugin,
-                        new PerWorldTask(world.getUID(), renderer, worldSetting),
-                        20L, 20L));
-            }
+            this.startWorld(world);
         }
     }
 
     @Override
     public void stop() {
-        this.scheduledTasks.forEach(ScheduledTask::cancel);
+        this.started = false;
+        this.scheduledTasks.values().forEach(ScheduledTask::cancel);
         this.scheduledTasks.clear();
+    }
+
+    @EventHandler
+    private void onWorldLoad(@NotNull WorldLoadEvent event) {
+        if (this.started) {
+            this.startWorld(event.getWorld());
+        }
+    }
+
+    @EventHandler
+    private void onWorldUnload(@NotNull WorldUnloadEvent event) {
+        var task = this.scheduledTasks.remove(event.getWorld().getUID());
+        if (task != null) {
+            task.cancel();
+        }
+    }
+
+    private void startWorld(@NotNull World world) {
+        this.scheduledTasks.computeIfAbsent(world.getUID(), worldUid -> {
+            var worldSettingMap = this.setting.worldSettingMap();
+            var worldSetting = worldSettingMap.getOrDefault(
+                    world.getName(),
+                    worldSettingMap.getOrDefault(world.getKey().asString(), worldSettingMap.get("default"))
+            );
+
+            if (!worldSetting.enabled()) {
+                return null;
+            }
+
+            WorldGuardRenderer renderer =
+                    worldSetting.separationSetting().enabled() ?
+                            new SeparatingWorldGuardRenderer(worldSetting, this.setting.markerSetSetting()) :
+                            new DefaultWorldGuardRenderer(worldSetting, this.setting.markerSetSetting());
+
+            return Bukkit.getGlobalRegionScheduler().runAtFixedRate(
+                    this.plugin,
+                    new PerWorldTask(worldUid, renderer, worldSetting, this.scheduledTasks),
+                    20L, 20L
+            );
+        });
     }
 
     private static class PerWorldTask implements Consumer<ScheduledTask> {
@@ -73,15 +108,20 @@ public class WorldGuardModule implements MarkerModule {
         private final WorldGuardRenderer renderer;
         private final WorldGuardSetting.WorldSetting setting;
         private final QueueingMarkerUpdater updater;
+        private final ConcurrentHashMap<UUID, ScheduledTask> scheduledTasks;
 
         private int cooldown;
         private boolean warned;
 
-        private PerWorldTask(@NotNull UUID worldUid, @NotNull WorldGuardRenderer renderer, @NotNull WorldGuardSetting.WorldSetting setting) {
+        private PerWorldTask(@NotNull UUID worldUid,
+                             @NotNull WorldGuardRenderer renderer,
+                             @NotNull WorldGuardSetting.WorldSetting setting,
+                             @NotNull ConcurrentHashMap<UUID, ScheduledTask> scheduledTasks) {
             this.worldUid = worldUid;
             this.renderer = renderer;
             this.setting = setting;
             this.updater = new QueueingMarkerUpdater(setting.updateLimit());
+            this.scheduledTasks = scheduledTasks;
         }
 
         @Override
@@ -97,12 +137,13 @@ public class WorldGuardModule implements MarkerModule {
 
             var world = Bukkit.getWorld(this.worldUid);
             if (world == null) {
+                this.cancelAndForget(scheduledTask);
                 return;
             }
 
             var blueMapWorld = api.getWorld(this.worldUid).or(() -> api.getWorld(BlueMapWorldId.create(world.getWorldPath(), world.getEnvironment())));
             if (blueMapWorld.isEmpty() || blueMapWorld.get().getMaps().isEmpty()) {
-                scheduledTask.cancel();
+                this.cancelAndForget(scheduledTask);
                 return;
             }
 
@@ -131,6 +172,11 @@ public class WorldGuardModule implements MarkerModule {
                     logger.warn("Please consider increasing values of update-interval or update-limit.");
                 }
             }
+        }
+
+        private void cancelAndForget(@NotNull ScheduledTask scheduledTask) {
+            scheduledTask.cancel();
+            this.scheduledTasks.remove(this.worldUid, scheduledTask);
         }
     }
 }
