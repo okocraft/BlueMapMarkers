@@ -79,6 +79,7 @@ public class WorldBorderModule implements MarkerModule {
         }
 
         var renderer = this.getRenderer(world);
+        renderer.render(world);
 
         for (var map : blueMapWorld.get().getMaps()) {
             if (this.setting.markerSetSetting().disabledMaps().contains(map.getId())) {
@@ -101,8 +102,7 @@ public class WorldBorderModule implements MarkerModule {
             return cached;
         }
 
-        var newRenderer = new WorldBorderRenderer(this.setting);
-        newRenderer.render(world);
+        var newRenderer = new WorldBorderRenderer(this.setting, world.getUID());
         Bukkit.getPluginManager().registerEvents(newRenderer, this.plugin);
 
         this.rendererMap.put(world.getUID(), newRenderer);

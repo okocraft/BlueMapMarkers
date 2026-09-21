@@ -17,10 +17,13 @@ import org.bukkit.event.Listener;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.UUID;
+
 class WorldBorderRenderer implements Listener {
 
     private final WorldBorderSetting setting;
     private final MarkerSet markerSet;
+    private final UUID worldUid;
 
     private String markerId = null;
 
@@ -28,9 +31,10 @@ class WorldBorderRenderer implements Listener {
     private double centerX = Double.NaN;
     private double centerZ = Double.NaN;
 
-    WorldBorderRenderer(@NotNull WorldBorderSetting setting) {
+    WorldBorderRenderer(@NotNull WorldBorderSetting setting, @NotNull UUID worldUid) {
         this.setting = setting;
         this.markerSet = setting.markerSetSetting().createMarkerSet();
+        this.worldUid = worldUid;
     }
 
     MarkerSet getMarkerSet() {
@@ -50,14 +54,24 @@ class WorldBorderRenderer implements Listener {
         this.updateMarker(this.markerSet.get(this.markerId));
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     private void onWorldBorderBoundsChange(@NotNull WorldBorderBoundsChangeEvent event) {
-        this.size = event.getNewSize();
-        this.updateMarker(this.markerSet.get(this.markerId));
+        if (!event.getWorld().getUID().equals(this.worldUid)) {
+            return;
+        }
+
+        if (event.getType() == WorldBorderBoundsChangeEvent.Type.INSTANT_MOVE) {
+            this.size = event.getNewSize();
+            this.updateMarker(this.markerSet.get(this.markerId));
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     private void onWorldBorderCenterChange(@NotNull WorldBorderCenterChangeEvent event) {
+        if (!event.getWorld().getUID().equals(this.worldUid)) {
+            return;
+        }
+
         var center = event.getNewCenter();
         this.centerX = center.getX();
         this.centerZ = center.getZ();
