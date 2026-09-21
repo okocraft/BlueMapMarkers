@@ -44,7 +44,7 @@ class QueueingMarkerUpdaterTest {
         Assertions.assertTrue(updater.doUpdate(renderer, regionManager));
         Assertions.assertTrue(updater.isFinished());
         Mockito.verify(renderer).renderRegion(third);
-        Mockito.verify(renderer).removeRegions(Mockito.argThat(Set::isEmpty));
+        Mockito.verify(renderer).removeRegions(Mockito.argThat(removed -> removed.isEmpty()));
     }
 
     @Test
@@ -87,7 +87,7 @@ class QueueingMarkerUpdaterTest {
         var updater = new QueueingMarkerUpdater(10);
 
         Assertions.assertTrue(updater.doUpdate(renderer, regionManager));
-        Mockito.verify(renderer).removeRegions(Mockito.argThat(Set::isEmpty));
+        Mockito.verify(renderer).removeRegions(Mockito.argThat(removed -> removed.isEmpty()));
     }
 
     private static RegionManager regionManager(
