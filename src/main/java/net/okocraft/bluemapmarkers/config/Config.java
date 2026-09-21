@@ -1,6 +1,7 @@
 package net.okocraft.bluemapmarkers.config;
 
 import org.jetbrains.annotations.NotNull;
+import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
@@ -33,7 +34,20 @@ public final class Config {
         var loader = YamlConfigurationLoader.builder()
                 .path(filepath)
                 .build();
+        var node = loader.load();
+        var config = node.require(Config.class);
 
-        return loader.load().require(Config.class);
+        try {
+            config.validate();
+        } catch (IllegalArgumentException e) {
+            throw new ConfigurateException(node, e.getMessage());
+        }
+
+        return config;
+    }
+
+    private void validate() {
+        this.worldBorderSetting.validate();
+        this.worldGuardSetting.validate();
     }
 }
