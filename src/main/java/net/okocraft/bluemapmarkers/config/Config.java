@@ -1,6 +1,5 @@
 package net.okocraft.bluemapmarkers.config;
 
-import de.bluecolored.bluemap.api.math.Color;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Required;
@@ -36,10 +35,9 @@ public final class Config {
     public static @NotNull Config loadFromYamlFile(@NotNull Path filepath) throws IOException {
         var loader = YamlConfigurationLoader.builder()
                 .path(filepath)
-                .defaultOptions(options -> options.serializers(serializers -> {
-                    serializers.registerExact(Color.class, ColorSerializer.INSTANCE);
-                    serializers.registerExact(Integer.class, IntegerSerializer.INSTANCE);
-                }))
+                .defaultOptions(options -> options.serializers(serializers ->
+                        serializers.registerExact(ColorSerializer.INSTANCE)
+                ))
                 .build();
 
         return loader.load().require(Config.class);
