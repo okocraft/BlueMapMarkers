@@ -43,7 +43,7 @@ public class WorldBorderModule implements MarkerModule, Listener {
                 this.plugin,
                 ignored -> this.doUpdate(),
                 60L,
-                this.setting.updateInterval() * 20L
+                this.setting.updateInterval * 20L
         );
     }
 
@@ -101,7 +101,7 @@ public class WorldBorderModule implements MarkerModule, Listener {
         var worlds = List.copyOf(Bukkit.getWorlds());
 
         for (var world : worlds) {
-            if (this.setting.disabledWorlds().contains(world.getName()) || this.setting.disabledWorlds().contains(world.getKey().asString())) {
+            if (this.setting.disabledWorlds.contains(world.getName()) || this.setting.disabledWorlds.contains(world.getKey().asString())) {
                 continue;
             }
 
@@ -119,7 +119,7 @@ public class WorldBorderModule implements MarkerModule, Listener {
         renderer.render(world);
 
         for (var map : blueMapWorld.get().getMaps()) {
-            if (this.setting.markerSetSetting().disabledMaps().contains(map.getId())) {
+            if (this.setting.markerSetSetting.disabledMaps.contains(map.getId())) {
                 continue;
             }
 
