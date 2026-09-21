@@ -1,8 +1,6 @@
 package net.okocraft.bluemapmarkers;
 
 import de.bluecolored.bluemap.api.BlueMapAPI;
-import dev.siroshun.codec4j.api.error.DecodeError;
-import dev.siroshun.jfun.result.Result;
 import net.okocraft.bluemapmarkers.config.Config;
 import net.okocraft.bluemapmarkers.module.MarkerModule;
 import net.okocraft.bluemapmarkers.module.worldborder.WorldBorderModule;
@@ -48,20 +46,20 @@ public class BlueMapMarkersPlugin extends JavaPlugin {
             }
         }
 
-        Result<Config, DecodeError> configLoadResult = Config.loadFromYamlFile(configFilepath);
-        if (configLoadResult.isFailure()) {
-            this.getSLF4JLogger().error("Failed to load config.yml: {}", configLoadResult.unwrapError());
+        Config config;
+        try {
+            config = Config.loadFromYamlFile(configFilepath);
+        } catch (IOException e) {
+            this.getSLF4JLogger().error("Failed to load config.yml", e);
             return;
         }
 
-        Config config = configLoadResult.unwrap();
-
-        if (config.worldBorderSetting().enabled()) {
-            this.addModule(new WorldBorderModule(config.worldBorderSetting()));
+        if (config.worldBorderSetting.enabled) {
+            this.addModule(new WorldBorderModule(config.worldBorderSetting));
         }
 
-        if (config.worldGuardSetting().enabled() && this.getServer().getPluginManager().getPlugin("WorldGuard") != null) {
-            this.addModule(new WorldGuardModule(config.worldGuardSetting()));
+        if (config.worldGuardSetting.enabled && this.getServer().getPluginManager().getPlugin("WorldGuard") != null) {
+            this.addModule(new WorldGuardModule(config.worldGuardSetting));
         }
 
         BlueMapAPI.onDisable(this.blueMapDisableListener);

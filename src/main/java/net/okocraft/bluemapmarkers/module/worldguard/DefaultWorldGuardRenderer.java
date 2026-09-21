@@ -16,7 +16,7 @@ class DefaultWorldGuardRenderer extends WorldGuardRenderer {
     private final MarkerSet markerSet;
 
     DefaultWorldGuardRenderer(@NotNull WorldGuardSetting.WorldSetting worldSetting, @NotNull MarkerSetSetting markerSetSetting) {
-        super(worldSetting.renderSetting());
+        super(worldSetting.renderSetting);
         this.markerSet = markerSetSetting.createMarkerSet();
     }
 

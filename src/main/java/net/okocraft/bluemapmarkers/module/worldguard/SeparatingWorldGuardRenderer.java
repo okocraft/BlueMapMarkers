@@ -24,11 +24,11 @@ class SeparatingWorldGuardRenderer extends WorldGuardRenderer {
     private final String labelFormat;
 
     SeparatingWorldGuardRenderer(@NotNull WorldGuardSetting.WorldSetting worldSetting, @NotNull MarkerSetSetting markerSetSetting) {
-        super(worldSetting.renderSetting());
+        super(worldSetting.renderSetting);
         this.markerSetSetting = markerSetSetting;
-        this.labelFormat = worldSetting.separationSetting().labelFormat();
-        this.centerSize = worldSetting.separationSetting().centerSize();
-        this.length = Math.max(1, worldSetting.separationSetting().size());
+        this.labelFormat = worldSetting.separationSetting.labelFormat;
+        this.centerSize = worldSetting.separationSetting.centerSize;
+        this.length = Math.max(1, worldSetting.separationSetting.size);
     }
 
     @Nullable RenderedRegionInfo renderRegion(@NotNull ProtectedRegion region) {
@@ -99,9 +99,9 @@ class SeparatingWorldGuardRenderer extends WorldGuardRenderer {
         }
 
         return MarkerSet.builder()
-                .defaultHidden(this.markerSetSetting.defaultHidden())
+                .defaultHidden(this.markerSetSetting.defaultHidden)
                 .label(label)
-                .sorting(this.markerSetSetting.sorting() + sec)
+                .sorting(this.markerSetSetting.sorting + sec)
                 .build();
     }
 

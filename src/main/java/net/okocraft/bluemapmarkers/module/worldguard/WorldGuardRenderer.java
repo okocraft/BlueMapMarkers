@@ -57,9 +57,9 @@ abstract class WorldGuardRenderer {
 
     protected WorldGuardRenderer(@NotNull WorldGuardSetting.RenderSetting setting) {
         this.setting = setting;
-        this.ownedRegionColor = RegionColor.fromSetting(setting.ownedRegion());
-        this.unownedRegionColor = RegionColor.fromSetting(setting.unownedRegion());
-        this.detailFormatter = DetailFormatter.compile(this.setting.detailFormat());
+        this.ownedRegionColor = new RegionColor(setting.ownedRegion.fillColor, setting.ownedRegion.outlineColor);
+        this.unownedRegionColor = new RegionColor(setting.unownedRegion.fillColor, setting.unownedRegion.outlineColor);
+        this.detailFormatter = DetailFormatter.compile(this.setting.detailFormat);
     }
 
     abstract @Nullable RenderedRegionInfo renderRegion(@NotNull ProtectedRegion region);
@@ -74,7 +74,7 @@ abstract class WorldGuardRenderer {
 
     protected @Nullable RegionRenderer.Result renderIfNeeded(@NotNull ProtectedRegion region) {
         StateFlag.State state = region.getFlag(RENDER_FLAG);
-        if (state == StateFlag.State.DENY || (!this.setting.defaultRender() && state != StateFlag.State.ALLOW)) {
+        if (state == StateFlag.State.DENY || (!this.setting.defaultRender && state != StateFlag.State.ALLOW)) {
             return null;
         }
         return RegionRenderer.render(region);
@@ -92,14 +92,14 @@ abstract class WorldGuardRenderer {
 
         ObjectMarker marker;
 
-        if (this.setting.render3D()) {
+        if (this.setting.render3D) {
             var extrudeMarker = new ExtrudeMarker(
                     region.getId(), position, renderResult.shape(), renderResult.minY(), renderResult.maxY()
             );
             extrudeMarker.setColors(outlineColor, fillColor);
             marker = extrudeMarker;
         } else {
-            var shapeMarker = new ShapeMarker(region.getId(), position, renderResult.shape(), this.setting.height());
+            var shapeMarker = new ShapeMarker(region.getId(), position, renderResult.shape(), this.setting.height);
             shapeMarker.setColors(outlineColor, fillColor);
             shapeMarker.setDepthTestEnabled(false);
             marker = shapeMarker;
@@ -107,8 +107,8 @@ abstract class WorldGuardRenderer {
 
         marker.setLabel(region.getId());
         marker.setDetail(this.detailFormatter.format(region));
-        marker.setMinDistance(this.setting.minDistance());
-        marker.setMaxDistance(this.setting.maxDistance());
+        marker.setMinDistance(this.setting.minDistance);
+        marker.setMaxDistance(this.setting.maxDistance);
         return marker;
     }
 
@@ -127,8 +127,5 @@ abstract class WorldGuardRenderer {
     }
 
     private record RegionColor(@NotNull Color fillColor, @NotNull Color outlineColor) {
-        private static @NotNull RegionColor fromSetting(@NotNull WorldGuardSetting.RegionColor color) {
-            return new RegionColor(color.fillColor(), color.outlineColor());
-        }
     }
 }
