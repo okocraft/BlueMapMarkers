@@ -44,12 +44,12 @@ jcommon {
 }
 
 
-val projectVersion = project.version.toString()
-
 tasks.processResources {
-    inputs.property("projectVersion", projectVersion)
+    val resourceTokens = mapOf("projectVersion" to project.version.toString())
+
+    inputs.properties(resourceTokens)
 
     filesMatching("plugin.yml") {
-        expand("projectVersion" to projectVersion)
+        expand(resourceTokens)
     }
 }
