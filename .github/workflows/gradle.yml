@@ -3,7 +3,7 @@ on: [ push, pull_request ]
 
 jobs:
   build:
-    uses: okocraft/workflows/.github/workflows/gradle.yml@735e5264e4e70ba4993be58cef8f1b3cab581a3d # v1
+    uses: okocraft/workflows/.github/workflows/gradle.yml@v1
     with:
       java-version: '25'
       package-name: BlueMapMarkers-Build-${{ github.run_number }}
