@@ -16,10 +16,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class BlueMapMarkersPlugin extends JavaPlugin {
 
     private final List<MarkerModule> modules = new ArrayList<>();
+    private final Consumer<BlueMapAPI> blueMapEnableListener = this::onBlueMapEnable;
+    private final Consumer<BlueMapAPI> blueMapDisableListener = this::onBlueMapDisable;
 
     @Override
     public void onLoad() {
@@ -61,12 +64,15 @@ public class BlueMapMarkersPlugin extends JavaPlugin {
             this.addModule(new WorldGuardModule(config.worldGuardSetting()));
         }
 
-        BlueMapAPI.onEnable(this::onEnable);
+        BlueMapAPI.onDisable(this.blueMapDisableListener);
+        BlueMapAPI.onEnable(this.blueMapEnableListener);
     }
 
     @Override
     public void onDisable() {
-        BlueMapAPI.onDisable(this::onDisable);
+        BlueMapAPI.unregisterListener(this.blueMapEnableListener);
+        BlueMapAPI.unregisterListener(this.blueMapDisableListener);
+        this.stopModules();
     }
 
     private void addModule(@NotNull MarkerModule module) {
@@ -74,11 +80,15 @@ public class BlueMapMarkersPlugin extends JavaPlugin {
         this.modules.add(module);
     }
 
-    private void onEnable(@NotNull BlueMapAPI api) {
+    private void onBlueMapEnable(@NotNull BlueMapAPI api) {
         this.modules.forEach(MarkerModule::start);
     }
 
-    private void onDisable(@NotNull BlueMapAPI api) {
+    private void onBlueMapDisable(@NotNull BlueMapAPI api) {
+        this.stopModules();
+    }
+
+    private void stopModules() {
         this.modules.forEach(MarkerModule::stop);
     }
 }
