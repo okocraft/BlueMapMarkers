@@ -1,10 +1,10 @@
 package net.okocraft.bluemapmarkers.module.worldguard;
 
 import com.flowpowered.math.vector.Vector3d;
+import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.flags.StringFlag;
-import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.markers.ExtrudeMarker;
@@ -21,28 +21,37 @@ import java.util.UUID;
 
 abstract class WorldGuardRenderer {
 
-    private static final StateFlag RENDER_FLAG = new StateFlag("render-on-bluemap", true);
-    private static final StringFlag COLOR_FLAG = new StringFlag("bluemap-color");
-    private static final StringFlag OUTLINE_FLAG = new StringFlag("bluemap-outline-color");
-    static final StringFlag DISPLAY_FLAG = new StringFlag("bluemap-display");
+    private static final StateFlag RENDER_FLAG = register(new StateFlag("render-on-bluemap", true), StateFlag.class);
+    private static final StringFlag COLOR_FLAG = register(new StringFlag("bluemap-color"), StringFlag.class);
+    private static final StringFlag OUTLINE_FLAG = register(new StringFlag("bluemap-outline-color"), StringFlag.class);
+    static final StringFlag DISPLAY_FLAG = register(new StringFlag("bluemap-display"), StringFlag.class);
 
     private final WorldGuardSetting.RenderSetting setting;
     private final RegionColor ownedRegionColor;
     private final RegionColor unownedRegionColor;
     private final DetailFormatter detailFormatter;
 
-    static void register(@NotNull FlagRegistry registry) {
-        register(registry, RENDER_FLAG);
-        register(registry, COLOR_FLAG);
-        register(registry, OUTLINE_FLAG);
-        register(registry, DISPLAY_FLAG);
+    static void registerFlags() {
+        // Invoking this method triggers class initialization and registers the static flag fields.
     }
 
-    private static void register(@NotNull FlagRegistry registry, @NotNull Flag<?> flag) {
+    private static <F extends Flag<?>> @NotNull F register(@NotNull F flag, @NotNull Class<F> flagType) {
+        var registry = WorldGuard.getInstance().getFlagRegistry();
+
         try {
             registry.register(flag);
+            return flag;
         } catch (com.sk89q.worldguard.protection.flags.registry.FlagConflictException e) {
-            throw new IllegalStateException("WorldGuard flag '" + flag.getName() + "' is already registered", e);
+            var existing = registry.get(flag.getName());
+
+            if (flagType.isInstance(existing)) {
+                return flagType.cast(existing);
+            }
+
+            throw new IllegalStateException(
+                    "WorldGuard flag '" + flag.getName() + "' is already registered with an incompatible type",
+                    e
+            );
         }
     }
 
