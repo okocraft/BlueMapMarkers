@@ -30,7 +30,8 @@ jcommon {
             exclude(group = "com.google.code.gson", module = "gson")
         }
 
-        implementation(libs.configurate.yaml)
+        compileOnly(libs.configurate.yaml)
+        testImplementation(libs.configurate.yaml)
 
         testImplementation(libs.junit.jupiter)
         testImplementation(libs.paper.api)
