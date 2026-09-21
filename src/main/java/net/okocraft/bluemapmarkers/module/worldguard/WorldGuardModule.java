@@ -29,11 +29,14 @@ public class WorldGuardModule implements MarkerModule {
         this.setting = setting;
     }
 
+    public static void registerFlags() {
+        WorldGuardRenderer.register(WorldGuard.getInstance().getFlagRegistry());
+    }
+
     @Override
     public void init(@NotNull BlueMapMarkersPlugin plugin) {
         this.plugin = plugin;
         PerWorldTask.logger = plugin.getSLF4JLogger();
-        WorldGuardRenderer.register(WorldGuard.getInstance().getFlagRegistry());
     }
 
     @Override
