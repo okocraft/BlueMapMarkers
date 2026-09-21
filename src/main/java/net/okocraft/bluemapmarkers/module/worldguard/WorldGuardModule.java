@@ -83,6 +83,14 @@ public class WorldGuardModule implements MarkerModule, Listener {
                     worldSettingMap.getOrDefault(world.getKey().asString(), worldSettingMap.get("default"))
             );
 
+            if (worldSetting == null) {
+                this.plugin.getSLF4JLogger().warn(
+                        "No WorldGuard marker setting is configured for world {} and no default setting is available.",
+                        world.getKey().asString()
+                );
+                return null;
+            }
+
             if (!worldSetting.enabled()) {
                 return null;
             }
