@@ -16,13 +16,17 @@ final class ColorSerializer implements TypeSerializer<Color> {
 
     @Override
     public Color deserialize(Type type, ConfigurationNode node) throws SerializationException {
-        var value = node.getString();
+        if (node.isMap() || node.isList()) {
+            throw new SerializationException(node, type, "Color must be a scalar value");
+        }
+
+        var value = node.rawScalar();
         if (value == null) {
-            return null;
+            throw new SerializationException(node, type, "No scalar color value present");
         }
 
         try {
-            return new Color(value);
+            return new Color(value.toString());
         } catch (NumberFormatException e) {
             throw new SerializationException(node, type, e);
         }
@@ -35,12 +39,11 @@ final class ColorSerializer implements TypeSerializer<Color> {
             return;
         }
 
-        int alpha = Math.round(color.getAlpha() * 255);
         node.set("#%02x%02x%02x%02x".formatted(
                 color.getRed(),
                 color.getGreen(),
                 color.getBlue(),
-                alpha
+                Math.round(color.getAlpha() * 255)
         ));
     }
 }
