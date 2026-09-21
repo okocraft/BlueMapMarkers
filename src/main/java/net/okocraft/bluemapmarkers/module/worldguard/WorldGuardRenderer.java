@@ -21,10 +21,10 @@ import java.util.UUID;
 
 abstract class WorldGuardRenderer {
 
-    private static StateFlag RENDER_FLAG = new StateFlag("render-on-bluemap", true);
-    private static StringFlag COLOR_FLAG = new StringFlag("bluemap-color");
-    private static StringFlag OUTLINE_FLAG = new StringFlag("bluemap-outline-color");
-    static StringFlag DISPLAY_FLAG = new StringFlag("bluemap-display");
+    private static final StateFlag RENDER_FLAG = new StateFlag("render-on-bluemap", true);
+    private static final StringFlag COLOR_FLAG = new StringFlag("bluemap-color");
+    private static final StringFlag OUTLINE_FLAG = new StringFlag("bluemap-outline-color");
+    static final StringFlag DISPLAY_FLAG = new StringFlag("bluemap-display");
 
     private final WorldGuardSetting.RenderSetting setting;
     private final RegionColor ownedRegionColor;
@@ -32,24 +32,17 @@ abstract class WorldGuardRenderer {
     private final DetailFormatter detailFormatter;
 
     static void register(@NotNull FlagRegistry registry) {
-        RENDER_FLAG = registerOrGet(registry, RENDER_FLAG, StateFlag.class);
-        COLOR_FLAG = registerOrGet(registry, COLOR_FLAG, StringFlag.class);
-        OUTLINE_FLAG = registerOrGet(registry, OUTLINE_FLAG, StringFlag.class);
-        DISPLAY_FLAG = registerOrGet(registry, DISPLAY_FLAG, StringFlag.class);
+        register(registry, RENDER_FLAG);
+        register(registry, COLOR_FLAG);
+        register(registry, OUTLINE_FLAG);
+        register(registry, DISPLAY_FLAG);
     }
 
-    private static <T extends Flag<?>> @NotNull T registerOrGet(@NotNull FlagRegistry registry,
-                                                               @NotNull T flag,
-                                                               @NotNull Class<T> flagType) {
+    private static void register(@NotNull FlagRegistry registry, @NotNull Flag<?> flag) {
         try {
             registry.register(flag);
-            return flag;
         } catch (com.sk89q.worldguard.protection.flags.registry.FlagConflictException e) {
-            var existing = registry.get(flag.getName());
-            if (flagType.isInstance(existing)) {
-                return flagType.cast(existing);
-            }
-            throw new IllegalStateException("WorldGuard flag '" + flag.getName() + "' is already registered with an incompatible type", e);
+            throw new IllegalStateException("WorldGuard flag '" + flag.getName() + "' is already registered", e);
         }
     }
 
