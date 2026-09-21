@@ -2,7 +2,6 @@ package net.okocraft.bluemapmarkers.module.worldborder;
 
 import com.flowpowered.math.vector.Vector2d;
 import com.flowpowered.math.vector.Vector3d;
-import de.bluecolored.bluemap.api.markers.Marker;
 import de.bluecolored.bluemap.api.markers.MarkerSet;
 import de.bluecolored.bluemap.api.markers.ShapeMarker;
 import de.bluecolored.bluemap.api.math.Color;
@@ -15,7 +14,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
@@ -46,12 +44,22 @@ class WorldBorderRenderer implements Listener {
 
         var worldBorder = world.getWorldBorder();
         var center = worldBorder.getCenter();
+        double newSize = worldBorder.getSize();
+        double newCenterX = center.getX();
+        double newCenterZ = center.getZ();
 
-        this.size = worldBorder.getSize();
-        this.centerX = center.getX();
-        this.centerZ = center.getZ();
+        if (Double.compare(this.size, newSize) == 0 &&
+                Double.compare(this.centerX, newCenterX) == 0 &&
+                Double.compare(this.centerZ, newCenterZ) == 0 &&
+                this.markerSet.get(this.markerId) != null) {
+            return;
+        }
 
-        this.updateMarker(this.markerSet.get(this.markerId));
+        this.size = newSize;
+        this.centerX = newCenterX;
+        this.centerZ = newCenterZ;
+
+        this.updateMarker();
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -62,7 +70,7 @@ class WorldBorderRenderer implements Listener {
 
         if (event.getType() == WorldBorderBoundsChangeEvent.Type.INSTANT_MOVE) {
             this.size = event.getNewSize();
-            this.updateMarker(this.markerSet.get(this.markerId));
+            this.updateMarker();
         }
     }
 
@@ -75,26 +83,22 @@ class WorldBorderRenderer implements Listener {
         var center = event.getNewCenter();
         this.centerX = center.getX();
         this.centerZ = center.getZ();
-        this.updateMarker(this.markerSet.get(this.markerId));
+        this.updateMarker();
     }
 
-    private void updateMarker(@Nullable Marker current) {
-        if (current instanceof ShapeMarker lineMarker) {
-            lineMarker.setShape(this.createShape(), this.setting.height());
-            lineMarker.setPosition(this.createCenter());
-        } else {
-            var newMarker = new ShapeMarker(this.markerId, this.createShape(), this.setting.height());
-            newMarker.setPosition(this.createCenter());
-            newMarker.setLineColor(this.setting.outlineColor());
-            newMarker.setFillColor(new Color(0, 0, 0, 0));
-            newMarker.setLabel(this.setting.label());
-            newMarker.setDetail(this.setting.label());
-            newMarker.setDepthTestEnabled(false);
-            newMarker.setMinDistance(0);
-            newMarker.setMaxDistance(Double.MAX_VALUE);
-            newMarker.setLineWidth(3);
-            this.markerSet.put(this.markerId, newMarker);
-        }
+    private void updateMarker() {
+        var newMarker = new ShapeMarker(
+                this.markerId, this.createCenter(), this.createShape(), this.setting.height()
+        );
+        newMarker.setLineColor(this.setting.outlineColor());
+        newMarker.setFillColor(new Color(0, 0, 0, 0));
+        newMarker.setLabel(this.setting.label());
+        newMarker.setDetail(this.setting.label());
+        newMarker.setDepthTestEnabled(false);
+        newMarker.setMinDistance(0);
+        newMarker.setMaxDistance(Double.MAX_VALUE);
+        newMarker.setLineWidth(3);
+        this.markerSet.put(this.markerId, newMarker);
     }
 
     private @NotNull Shape createShape() {

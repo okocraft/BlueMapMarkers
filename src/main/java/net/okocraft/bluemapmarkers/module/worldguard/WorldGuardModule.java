@@ -11,6 +11,7 @@ import net.okocraft.bluemapmarkers.util.BlueMapWorldId;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
@@ -59,12 +60,8 @@ public class WorldGuardModule implements MarkerModule, Listener {
 
         var api = BlueMapAPI.getInstance().orElse(null);
         if (api != null) {
-            for (var map : api.getMaps()) {
-                for (var worldUid : this.scheduledTasks.keySet()) {
-                    var markerSetId = "WorldGuard-" + worldUid;
-                    map.getMarkerSets().remove(markerSetId);
-                    map.getMarkerSets().keySet().removeIf(id -> id.startsWith(markerSetId + "_"));
-                }
+            for (var worldUid : this.scheduledTasks.keySet()) {
+                removeMarkerSets(api, worldUid);
             }
         }
 
@@ -79,11 +76,22 @@ public class WorldGuardModule implements MarkerModule, Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     private void onWorldUnload(@NotNull WorldUnloadEvent event) {
-        var task = this.scheduledTasks.remove(event.getWorld().getUID());
+        var worldUid = event.getWorld().getUID();
+        var task = this.scheduledTasks.remove(worldUid);
         if (task != null) {
             task.cancel();
+        }
+
+        BlueMapAPI.getInstance().ifPresent(api -> removeMarkerSets(api, worldUid));
+    }
+
+    private static void removeMarkerSets(@NotNull BlueMapAPI api, @NotNull UUID worldUid) {
+        var markerSetId = "WorldGuard-" + worldUid;
+        for (var map : api.getMaps()) {
+            map.getMarkerSets().remove(markerSetId);
+            map.getMarkerSets().keySet().removeIf(id -> id.startsWith(markerSetId + "_"));
         }
     }
 
@@ -157,6 +165,7 @@ public class WorldGuardModule implements MarkerModule, Listener {
 
             var world = Bukkit.getWorld(this.worldUid);
             if (world == null) {
+                removeMarkerSets(api, this.worldUid);
                 this.cancelAndForget(scheduledTask);
                 return;
             }
