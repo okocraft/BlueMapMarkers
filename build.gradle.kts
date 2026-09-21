@@ -1,7 +1,6 @@
 plugins {
     `java-library`
     alias(libs.plugins.jcommon)
-    alias(libs.plugins.bundler)
 }
 
 jcommon {
@@ -44,11 +43,15 @@ jcommon {
     }
 }
 
-bundler {
-    copyToRootBuildDirectory("BlueMapMarkers-${project.version}")
-    replacePluginVersionForBukkit(project.version)
+
+base {
+    archivesName = "BlueMapMarkers"
 }
 
-tasks.shadowJar {
-    minimize()
+tasks.processResources {
+    inputs.property("projectVersion", project.version)
+
+    filesMatching("plugin.yml") {
+        expand("projectVersion" to project.version.toString())
+    }
 }
