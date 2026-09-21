@@ -8,6 +8,8 @@ jcommon {
     javaVersion = JavaVersion.VERSION_25
 
     setupPaperRepository()
+    setupJUnit(libs.junit.bom)
+    setupMockito(libs.mockito)
 
     repositories {
         mavenCentral()
@@ -29,6 +31,15 @@ jcommon {
         }
 
         implementation(libs.codec4j.io.yaml)
+
+        testImplementation(libs.junit.jupiter)
+        testImplementation(libs.paper.api)
+        testImplementation(libs.bluemap)
+        testImplementation(libs.worldguard) {
+            // Keep the test runtime aligned with the production dependency constraints.
+            exclude(group = "com.google.guava", module = "guava")
+            exclude(group = "com.google.code.gson", module = "gson")
+        }
     }
 }
 
