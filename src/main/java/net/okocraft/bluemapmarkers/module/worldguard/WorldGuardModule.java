@@ -35,7 +35,7 @@ public class WorldGuardModule implements MarkerModule, Listener {
     }
 
     public static void registerFlags() {
-        WorldGuardRenderer.register(WorldGuard.getInstance().getFlagRegistry());
+        WorldGuardRenderer.registerFlags();
     }
 
     @Override
