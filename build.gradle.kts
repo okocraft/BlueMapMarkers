@@ -48,10 +48,12 @@ base {
     archivesName = "BlueMapMarkers"
 }
 
+val projectVersion = project.version.toString()
+
 tasks.processResources {
-    inputs.property("projectVersion", project.version)
+    inputs.property("projectVersion", projectVersion)
 
     filesMatching("plugin.yml") {
-        expand("projectVersion" to project.version.toString())
+        expand("projectVersion" to projectVersion)
     }
 }
