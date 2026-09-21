@@ -13,12 +13,12 @@ import java.util.Set;
 @ConfigSerializable
 public final class WorldGuardSetting {
 
-    private boolean enabled = true;
+    public boolean enabled = true;
     @Required
     @Setting("marker-set")
-    private MarkerSetSetting markerSetSetting;
+    public MarkerSetSetting markerSetSetting;
     @Required
-    private Map<String, WorldSetting> worldSettingMap;
+    public Map<String, WorldSetting> worldSettingMap;
 
     public WorldGuardSetting() {
     }
@@ -33,29 +33,17 @@ public final class WorldGuardSetting {
         this.worldSettingMap = worldSettingMap;
     }
 
-    public boolean enabled() {
-        return this.enabled;
-    }
-
-    public MarkerSetSetting markerSetSetting() {
-        return this.markerSetSetting;
-    }
-
-    public Map<String, WorldSetting> worldSettingMap() {
-        return this.worldSettingMap;
-    }
-
     @ConfigSerializable
     public static final class WorldSetting {
 
-        private boolean enabled = true;
-        private Set<String> disabledMaps = Set.of();
-        private int updateInterval = 10;
-        private int updateLimit = 50;
+        public boolean enabled = true;
+        public Set<String> disabledMaps = Set.of();
+        public int updateInterval = 10;
+        public int updateLimit = 50;
         @Required
-        private RenderSetting renderSetting;
+        public RenderSetting renderSetting;
         @Required
-        private SeparationSetting separationSetting;
+        public SeparationSetting separationSetting;
 
         public WorldSetting() {
         }
@@ -76,30 +64,6 @@ public final class WorldGuardSetting {
             this.separationSetting = separationSetting;
         }
 
-        public boolean enabled() {
-            return this.enabled;
-        }
-
-        public Set<String> disabledMaps() {
-            return this.disabledMaps;
-        }
-
-        public int updateInterval() {
-            return this.updateInterval;
-        }
-
-        public int updateLimit() {
-            return this.updateLimit;
-        }
-
-        public RenderSetting renderSetting() {
-            return this.renderSetting;
-        }
-
-        public SeparationSetting separationSetting() {
-            return this.separationSetting;
-        }
-
         @PostProcess
         private void validate() throws SerializationException {
             if (this.updateInterval < 0) {
@@ -111,18 +75,11 @@ public final class WorldGuardSetting {
         }
     }
 
-    public interface RegionColor {
-
-        Color fillColor();
-
-        Color outlineColor();
-    }
-
     @ConfigSerializable
-    public static final class OwnedRegionColor implements RegionColor {
+    public static final class OwnedRegionColor {
 
-        private Color fillColor = new Color(30, 144, 255, 1);
-        private Color outlineColor = new Color(0, 191, 255, 1);
+        public Color fillColor = new Color(30, 144, 255, 1);
+        public Color outlineColor = new Color(0, 191, 255, 1);
 
         public OwnedRegionColor() {
         }
@@ -131,23 +88,13 @@ public final class WorldGuardSetting {
             this.fillColor = fillColor;
             this.outlineColor = outlineColor;
         }
-
-        @Override
-        public Color fillColor() {
-            return this.fillColor;
-        }
-
-        @Override
-        public Color outlineColor() {
-            return this.outlineColor;
-        }
     }
 
     @ConfigSerializable
-    public static final class UnownedRegionColor implements RegionColor {
+    public static final class UnownedRegionColor {
 
-        private Color fillColor = new Color(30, 144, 255, 1);
-        private Color outlineColor = new Color(0, 255, 0, 1);
+        public Color fillColor = new Color(30, 144, 255, 1);
+        public Color outlineColor = new Color(0, 255, 0, 1);
 
         public UnownedRegionColor() {
         }
@@ -156,37 +103,27 @@ public final class WorldGuardSetting {
             this.fillColor = fillColor;
             this.outlineColor = outlineColor;
         }
-
-        @Override
-        public Color fillColor() {
-            return this.fillColor;
-        }
-
-        @Override
-        public Color outlineColor() {
-            return this.outlineColor;
-        }
     }
 
     @ConfigSerializable
     public static final class RenderSetting {
 
-        private boolean defaultRender = true;
+        public boolean defaultRender = true;
         @Required
-        private OwnedRegionColor ownedRegion;
+        public OwnedRegionColor ownedRegion;
         @Required
-        private UnownedRegionColor unownedRegion;
-        private String detailFormat = """
+        public UnownedRegionColor unownedRegion;
+        public String detailFormat = """
                 <h2 style="color:#00bfff;text-align:center;margin-block-end:0.3em">{region_displayname}</h2>
                 <br/>
                 <span style="font-size:100%;">Owners: </span><span style="font-weight:bold;">{region_owners}</span><br/>
                 <span style="font-size:100%;">Members: </span><span style="font-weight:bold;">{region_members}</span><br/>
                 """.strip();
         @Setting("render-3d")
-        private boolean render3D = true;
-        private float height = 63f;
-        private double minDistance = 0d;
-        private double maxDistance = 1000d;
+        public boolean render3D = true;
+        public float height = 63f;
+        public double minDistance = 0d;
+        public double maxDistance = 1000d;
 
         public RenderSetting() {
         }
@@ -210,47 +147,15 @@ public final class WorldGuardSetting {
             this.minDistance = minDistance;
             this.maxDistance = maxDistance;
         }
-
-        public boolean defaultRender() {
-            return this.defaultRender;
-        }
-
-        public OwnedRegionColor ownedRegion() {
-            return this.ownedRegion;
-        }
-
-        public UnownedRegionColor unownedRegion() {
-            return this.unownedRegion;
-        }
-
-        public String detailFormat() {
-            return this.detailFormat;
-        }
-
-        public boolean render3D() {
-            return this.render3D;
-        }
-
-        public float height() {
-            return this.height;
-        }
-
-        public double minDistance() {
-            return this.minDistance;
-        }
-
-        public double maxDistance() {
-            return this.maxDistance;
-        }
     }
 
     @ConfigSerializable
     public static final class SeparationSetting {
 
-        private boolean enabled = true;
-        private String labelFormat = "WorldGuard (%min% ~ %max%)";
-        private int size = 3;
-        private int centerSize = 500;
+        public boolean enabled = true;
+        public String labelFormat = "WorldGuard (%min% ~ %max%)";
+        public int size = 3;
+        public int centerSize = 500;
 
         public SeparationSetting() {
         }
@@ -260,22 +165,6 @@ public final class WorldGuardSetting {
             this.labelFormat = labelFormat;
             this.size = size;
             this.centerSize = centerSize;
-        }
-
-        public boolean enabled() {
-            return this.enabled;
-        }
-
-        public String labelFormat() {
-            return this.labelFormat;
-        }
-
-        public int size() {
-            return this.size;
-        }
-
-        public int centerSize() {
-            return this.centerSize;
         }
 
         @PostProcess
