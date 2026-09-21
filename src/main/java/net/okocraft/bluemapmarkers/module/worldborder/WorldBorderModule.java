@@ -8,6 +8,7 @@ import net.okocraft.bluemapmarkers.module.MarkerModule;
 import net.okocraft.bluemapmarkers.util.BlueMapWorldId;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -48,9 +49,11 @@ public class WorldBorderModule implements MarkerModule {
     public void stop() {
         if (this.updateTask != null) {
             this.updateTask.cancel();
-            this.rendererMap.clear();
             this.updateTask = null;
         }
+
+        this.rendererMap.values().forEach(HandlerList::unregisterAll);
+        this.rendererMap.clear();
     }
 
     private void doUpdate() {
