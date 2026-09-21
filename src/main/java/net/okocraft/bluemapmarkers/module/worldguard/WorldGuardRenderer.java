@@ -85,29 +85,28 @@ abstract class WorldGuardRenderer {
         boolean isOwned = region.hasMembersOrOwners();
         var outlineColor = getSpecifiedOrDefaultColor(region, OUTLINE_FLAG, isOwned ? this.ownedRegionColor.outlineColor() : this.unownedRegionColor.outlineColor());
         var fillColor = getSpecifiedOrDefaultColor(region, COLOR_FLAG, isOwned ? this.ownedRegionColor.fillColor() : this.unownedRegionColor.fillColor());
+        var position2d = renderResult.shape().getPoint(0);
+        var position = new Vector3d(
+                position2d.getX(), ((double) (renderResult.minY() + renderResult.maxY()) / 2), position2d.getY()
+        );
 
         ObjectMarker marker;
 
         if (this.setting.render3D()) {
             var extrudeMarker = new ExtrudeMarker(
-                    region.getId(), renderResult.shape(), renderResult.minY(), renderResult.maxY()
+                    region.getId(), position, renderResult.shape(), renderResult.minY(), renderResult.maxY()
             );
             extrudeMarker.setColors(outlineColor, fillColor);
             marker = extrudeMarker;
         } else {
-            var shapeMarker = new ShapeMarker(region.getId(), renderResult.shape(), this.setting.height());
+            var shapeMarker = new ShapeMarker(region.getId(), position, renderResult.shape(), this.setting.height());
             shapeMarker.setColors(outlineColor, fillColor);
             shapeMarker.setDepthTestEnabled(false);
             marker = shapeMarker;
         }
 
-        var position2d = renderResult.shape().getPoint(0);
-
         marker.setLabel(region.getId());
         marker.setDetail(this.detailFormatter.format(region));
-        marker.setPosition(new Vector3d(
-                position2d.getX(), ((double) (renderResult.minY() + renderResult.maxY()) / 2), position2d.getY()
-        ));
         marker.setMinDistance(this.setting.minDistance());
         marker.setMaxDistance(this.setting.maxDistance());
         return marker;

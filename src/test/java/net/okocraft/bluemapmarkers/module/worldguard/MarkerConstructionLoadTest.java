@@ -87,7 +87,7 @@ class MarkerConstructionLoadTest {
     }
 
     private static ShapeMarker createShapeDirectly() {
-        var marker = new ShapeMarker("region", SHAPE, 63f);
+        var marker = new ShapeMarker("region", POSITION, SHAPE, 63f);
         marker.setColors(OUTLINE, FILL);
         marker.setDepthTestEnabled(false);
         configure(marker);
@@ -108,7 +108,7 @@ class MarkerConstructionLoadTest {
     }
 
     private static ExtrudeMarker createExtrudeDirectly() {
-        var marker = new ExtrudeMarker("region", SHAPE, -64f, 320f);
+        var marker = new ExtrudeMarker("region", POSITION, SHAPE, -64f, 320f);
         marker.setColors(OUTLINE, FILL);
         configure(marker);
         return marker;
@@ -117,7 +117,6 @@ class MarkerConstructionLoadTest {
     private static void configure(ObjectMarker marker) {
         marker.setLabel("region");
         marker.setDetail("detail");
-        marker.setPosition(POSITION);
         marker.setMinDistance(0);
         marker.setMaxDistance(1000);
     }
