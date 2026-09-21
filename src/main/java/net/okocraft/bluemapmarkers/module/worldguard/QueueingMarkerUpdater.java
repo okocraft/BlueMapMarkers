@@ -31,6 +31,7 @@ class QueueingMarkerUpdater {
 
             if (id == null) {
                 renderer.removeRegions(this.removedRegions);
+                this.renderedRegions.removeAll(this.removedRegions);
                 this.removedRegions.clear();
                 return true;
             }
