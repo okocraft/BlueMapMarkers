@@ -54,6 +54,15 @@ public class WorldBorderModule implements MarkerModule, Listener {
             this.updateTask = null;
         }
 
+        var api = BlueMapAPI.getInstance().orElse(null);
+        if (api != null) {
+            for (var map : api.getMaps()) {
+                for (var worldUid : this.rendererMap.keySet()) {
+                    map.getMarkerSets().remove("WorldBorder-" + worldUid);
+                }
+            }
+        }
+
         this.rendererMap.values().forEach(HandlerList::unregisterAll);
         this.rendererMap.clear();
     }
