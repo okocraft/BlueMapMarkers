@@ -1,8 +1,9 @@
 package net.okocraft.bluemapmarkers.config;
 
+import de.bluecolored.bluemap.api.math.Color;
 import org.jetbrains.annotations.NotNull;
-import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
+import org.spongepowered.configurate.objectmapping.meta.Required;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import java.io.IOException;
@@ -11,8 +12,10 @@ import java.nio.file.Path;
 @ConfigSerializable
 public final class Config {
 
-    private WorldBorderSetting worldBorderSetting = new WorldBorderSetting();
-    private WorldGuardSetting worldGuardSetting = new WorldGuardSetting();
+    @Required
+    private WorldBorderSetting worldBorderSetting;
+    @Required
+    private WorldGuardSetting worldGuardSetting;
 
     public Config() {
     }
@@ -33,21 +36,11 @@ public final class Config {
     public static @NotNull Config loadFromYamlFile(@NotNull Path filepath) throws IOException {
         var loader = YamlConfigurationLoader.builder()
                 .path(filepath)
+                .defaultOptions(options -> options.serializers(serializers ->
+                        serializers.registerExact(Color.class, ColorSerializer.INSTANCE)
+                ))
                 .build();
-        var node = loader.load();
-        var config = node.require(Config.class);
 
-        try {
-            config.validate();
-        } catch (IllegalArgumentException e) {
-            throw new ConfigurateException(node, e.getMessage());
-        }
-
-        return config;
-    }
-
-    private void validate() {
-        this.worldBorderSetting.validate();
-        this.worldGuardSetting.validate();
+        return loader.load().require(Config.class);
     }
 }
