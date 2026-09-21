@@ -29,7 +29,7 @@ class QueueingMarkerUpdater {
         this.removedRegions = new ObjectOpenHashSet<>(this.renderedRegions);
     }
 
-    boolean doUpdate(@NotNull RegionUpdateRenderer renderer) {
+    boolean doUpdate(@NotNull WorldGuardRenderer renderer) {
         if (this.regionIterator == null) {
             throw new IllegalStateException("beginUpdate must be called before doUpdate");
         }
@@ -58,7 +58,7 @@ class QueueingMarkerUpdater {
         return false;
     }
 
-    private void finishUpdate(@NotNull RegionUpdateRenderer renderer) {
+    private void finishUpdate(@NotNull WorldGuardRenderer renderer) {
         renderer.removeRegions(this.removedRegions);
         this.renderedRegions.removeAll(this.removedRegions);
         this.removedRegions.clear();
