@@ -54,12 +54,12 @@ public class BlueMapMarkersPlugin extends JavaPlugin {
             return;
         }
 
-        if (config.worldBorderSetting().enabled()) {
-            this.addModule(new WorldBorderModule(config.worldBorderSetting()));
+        if (config.worldBorderSetting.enabled) {
+            this.addModule(new WorldBorderModule(config.worldBorderSetting));
         }
 
-        if (config.worldGuardSetting().enabled() && this.getServer().getPluginManager().getPlugin("WorldGuard") != null) {
-            this.addModule(new WorldGuardModule(config.worldGuardSetting()));
+        if (config.worldGuardSetting.enabled && this.getServer().getPluginManager().getPlugin("WorldGuard") != null) {
+            this.addModule(new WorldGuardModule(config.worldGuardSetting));
         }
 
         BlueMapAPI.onDisable(this.blueMapDisableListener);
