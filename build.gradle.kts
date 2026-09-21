@@ -40,20 +40,3 @@ bundler {
 tasks.shadowJar {
     minimize()
 }
-
-dependencies {
-    testImplementation(platform("org.junit:junit-bom:5.11.4"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation(libs.paper.api)
-    testImplementation(libs.bluemap)
-    testImplementation(libs.worldguard) {
-        exclude(group = "com.google.guava", module = "guava")
-        exclude(group = "com.google.code.gson", module = "gson")
-    }
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-}
-
-tasks.test {
-    useJUnitPlatform()
-    testLogging.showStandardStreams = true
-}

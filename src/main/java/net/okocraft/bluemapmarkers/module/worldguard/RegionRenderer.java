@@ -151,10 +151,6 @@ final class RegionRenderer {
         return new Vector2d(xCurNew, zCurNew);
     }
 
-    static Vector2d[] expandPolygonXZByOneForBenchmark(ImmutableList<BlockVector2> points) {
-        return expandPolygonXZByOne(points);
-    }
-
     /**
      * Calc loop direction of given polygon.
      *
