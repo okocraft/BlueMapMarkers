@@ -46,7 +46,10 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation(libs.paper.api)
     testImplementation(libs.bluemap)
-    testImplementation(libs.worldguard)
+    testImplementation(libs.worldguard) {
+        exclude(group = "com.google.guava", module = "guava")
+        exclude(group = "com.google.code.gson", module = "gson")
+    }
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
