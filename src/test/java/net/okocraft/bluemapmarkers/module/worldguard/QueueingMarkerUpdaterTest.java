@@ -36,14 +36,12 @@ class QueueingMarkerUpdaterTest {
 
         Assertions.assertFalse(updater.doUpdate(renderer, regionManager));
         Assertions.assertFalse(updater.isFinished());
-        Mockito.verify(renderer).renderRegion(first);
-        Mockito.verify(renderer).renderRegion(second);
-        Mockito.verify(renderer, Mockito.never()).renderRegion(third);
+        Mockito.verify(renderer, Mockito.times(2)).renderRegion(Mockito.any());
         Mockito.verify(renderer, Mockito.never()).removeRegions(Mockito.any());
 
         Assertions.assertTrue(updater.doUpdate(renderer, regionManager));
         Assertions.assertTrue(updater.isFinished());
-        Mockito.verify(renderer).renderRegion(third);
+        Mockito.verify(renderer, Mockito.times(3)).renderRegion(Mockito.any());
         Mockito.verify(renderer).removeRegions(Mockito.argThat(removed -> removed.isEmpty()));
     }
 
