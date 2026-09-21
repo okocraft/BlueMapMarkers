@@ -30,9 +30,7 @@ class QueueingMarkerUpdater {
             var id = this.regionIdQueue.poll();
 
             if (id == null) {
-                renderer.removeRegions(this.removedRegions);
-                this.renderedRegions.removeAll(this.removedRegions);
-                this.removedRegions.clear();
+                this.finishUpdate(renderer);
                 return true;
             }
 
@@ -48,7 +46,18 @@ class QueueingMarkerUpdater {
             }
         }
 
-        return this.regionIdQueue.isEmpty();
+        if (this.regionIdQueue.isEmpty()) {
+            this.finishUpdate(renderer);
+            return true;
+        }
+
+        return false;
+    }
+
+    private void finishUpdate(@NotNull WorldGuardRenderer renderer) {
+        renderer.removeRegions(this.removedRegions);
+        this.renderedRegions.removeAll(this.removedRegions);
+        this.removedRegions.clear();
     }
 
     boolean isFinished() {
