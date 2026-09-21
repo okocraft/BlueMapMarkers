@@ -41,6 +41,21 @@ public final class WorldGuardSetting {
         return this.worldSettingMap;
     }
 
+    void validate() {
+        if (this.worldSettingMap == null) {
+            throw new IllegalArgumentException("world-guard-setting.world-setting-map must not be null");
+        }
+
+        for (var entry : this.worldSettingMap.entrySet()) {
+            if (entry.getValue() == null) {
+                throw new IllegalArgumentException(
+                        "world-guard-setting.world-setting-map." + entry.getKey() + " must not be null"
+                );
+            }
+            entry.getValue().validate("world-guard-setting.world-setting-map." + entry.getKey());
+        }
+    }
+
     @ConfigSerializable
     public static final class WorldSetting {
 
@@ -98,6 +113,24 @@ public final class WorldGuardSetting {
         public SeparationSetting separationSetting() {
             return this.separationSetting;
         }
+
+        private void validate(String path) {
+            if (this.updateInterval < 0) {
+                throw new IllegalArgumentException(path + ".update-interval must be a non-negative integer");
+            }
+            if (this.updateLimit <= 0) {
+                throw new IllegalArgumentException(path + ".update-limit must be a positive integer");
+            }
+            if (this.renderSetting == null) {
+                throw new IllegalArgumentException(path + ".render-setting must not be null");
+            }
+            if (this.separationSetting == null) {
+                throw new IllegalArgumentException(path + ".separation-setting must not be null");
+            }
+
+            this.renderSetting.validate();
+            this.separationSetting.validate(path + ".separation-setting");
+        }
     }
 
     public interface RegionColor {
@@ -141,6 +174,11 @@ public final class WorldGuardSetting {
             }
             return this.outlineColor;
         }
+
+        private void validate() {
+            this.fillColor();
+            this.outlineColor();
+        }
     }
 
     @ConfigSerializable
@@ -176,6 +214,11 @@ public final class WorldGuardSetting {
                 this.outlineColor = new Color(this.outlineColorValue);
             }
             return this.outlineColor;
+        }
+
+        private void validate() {
+            this.fillColor();
+            this.outlineColor();
         }
     }
 
@@ -257,6 +300,18 @@ public final class WorldGuardSetting {
         public double maxDistance() {
             return this.maxDistance;
         }
+
+        private void validate() {
+            if (this.ownedRegion == null) {
+                throw new IllegalArgumentException("owned-region must not be null");
+            }
+            if (this.unownedRegion == null) {
+                throw new IllegalArgumentException("unowned-region must not be null");
+            }
+
+            this.ownedRegion.validate();
+            this.unownedRegion.validate();
+        }
     }
 
     @ConfigSerializable
@@ -293,6 +348,15 @@ public final class WorldGuardSetting {
 
         public int centerSize() {
             return this.centerSize;
+        }
+
+        private void validate(String path) {
+            if (this.size <= 0) {
+                throw new IllegalArgumentException(path + ".size must be a positive integer");
+            }
+            if (this.centerSize < 0) {
+                throw new IllegalArgumentException(path + ".center-size must be a non-negative integer");
+            }
         }
     }
 }
