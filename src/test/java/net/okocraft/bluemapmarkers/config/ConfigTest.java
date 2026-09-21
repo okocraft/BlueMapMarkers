@@ -77,6 +77,19 @@ class ConfigTest {
     }
 
     @Test
+    void testBundledConfigLoads() throws IOException {
+        try (var input = ConfigTest.class.getResourceAsStream("/config.yml")) {
+            Assertions.assertNotNull(input);
+
+            var path = this.tempDir.resolve("bundled-config.yml");
+            Files.copy(input, path);
+
+            var result = Config.loadFromYamlFile(path);
+            Assertions.assertFalse(result.isFailure(), result::toString);
+        }
+    }
+
+    @Test
     void testLoadRejectsNonPositiveWorldBorderUpdateInterval() throws IOException {
         var yaml = MINIMAL_CONFIG.replace(
                 "  marker-set:\n    name: Border\n",
