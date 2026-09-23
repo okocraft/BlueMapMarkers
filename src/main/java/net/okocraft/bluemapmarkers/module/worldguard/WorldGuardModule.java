@@ -50,34 +50,27 @@ public class WorldGuardModule implements MarkerModule, Listener {
 
     @Override
     public void start() {
+        this.plugin.getSLF4JLogger().info("Starting WorldGuard module...");
+
         this.started = true;
-
-        var worlds = List.copyOf(Bukkit.getWorlds());
-        this.plugin.getSLF4JLogger().info(
-                "Initializing WorldGuard marker tasks for {} loaded world(s)...",
-                worlds.size()
-        );
-
-        for (var world : worlds) {
+        for (var world : List.copyOf(Bukkit.getWorlds())) {
             this.startWorld(world);
         }
 
         this.plugin.getSLF4JLogger().info(
-                "Scheduled WorldGuard marker updates for {} world(s).",
+                "WorldGuard module started with {} active world(s).",
                 this.scheduledTasks.size()
         );
     }
 
     @Override
     public void stop() {
-        this.started = false;
+        this.plugin.getSLF4JLogger().info(
+                "Stopping WorldGuard module with {} active world(s)...",
+                this.scheduledTasks.size()
+        );
 
-        if (!this.scheduledTasks.isEmpty()) {
-            this.plugin.getSLF4JLogger().info(
-                    "Cancelling {} WorldGuard marker update task(s)...",
-                    this.scheduledTasks.size()
-            );
-        }
+        this.started = false;
 
         var api = BlueMapAPI.getInstance().orElse(null);
         if (api != null) {
@@ -88,30 +81,22 @@ public class WorldGuardModule implements MarkerModule, Listener {
 
         this.scheduledTasks.values().forEach(ScheduledTask::cancel);
         this.scheduledTasks.clear();
+
+        this.plugin.getSLF4JLogger().info("WorldGuard module stopped.");
     }
 
     @EventHandler
     private void onWorldLoad(@NotNull WorldLoadEvent event) {
         if (this.started) {
-            this.plugin.getSLF4JLogger().info(
-                    "World {} loaded. Initializing WorldGuard markers...",
-                    event.getWorld().getKey().asString()
-            );
             this.startWorld(event.getWorld());
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     private void onWorldUnload(@NotNull WorldUnloadEvent event) {
-        var world = event.getWorld();
-        var worldUid = world.getUID();
+        var worldUid = event.getWorld().getUID();
         var task = this.scheduledTasks.remove(worldUid);
-
         if (task != null) {
-            this.plugin.getSLF4JLogger().info(
-                    "World {} unloaded. Cancelling WorldGuard marker update task...",
-                    world.getKey().asString()
-            );
             task.cancel();
         }
 
@@ -143,10 +128,6 @@ public class WorldGuardModule implements MarkerModule, Listener {
             }
 
             if (!worldSetting.enabled) {
-                this.plugin.getSLF4JLogger().info(
-                        "WorldGuard markers are disabled for world {}.",
-                        world.getKey().asString()
-                );
                 return null;
             }
 
@@ -154,14 +135,6 @@ public class WorldGuardModule implements MarkerModule, Listener {
                     worldSetting.separationSetting.enabled ?
                             new SeparatingWorldGuardRenderer(worldSetting, this.setting.markerSetSetting) :
                             new DefaultWorldGuardRenderer(worldSetting, this.setting.markerSetSetting);
-
-            this.plugin.getSLF4JLogger().info(
-                    "Scheduling WorldGuard marker updates for world {} (interval: {} second(s), update limit: {}, separated marker sets: {})...",
-                    world.getKey().asString(),
-                    worldSetting.updateInterval,
-                    worldSetting.updateLimit,
-                    worldSetting.separationSetting.enabled
-            );
 
             return Bukkit.getGlobalRegionScheduler().runAtFixedRate(
                     this.plugin,
