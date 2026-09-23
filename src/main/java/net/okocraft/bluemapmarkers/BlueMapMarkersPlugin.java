@@ -103,34 +103,24 @@ public class BlueMapMarkersPlugin extends JavaPlugin {
     }
 
     private void onBlueMapEnable(@NotNull BlueMapAPI api) {
-        this.getSLF4JLogger().info("BlueMap API enabled. Scheduling marker modules to start...");
+        this.getSLF4JLogger().info("BlueMap API enabled. Starting marker modules...");
         this.getServer().getGlobalRegionScheduler().execute(this, this::startModules);
     }
 
     private void onBlueMapDisable(@NotNull BlueMapAPI api) {
-        this.getSLF4JLogger().info("BlueMap API disabled. Scheduling marker modules to stop...");
+        this.getSLF4JLogger().info("BlueMap API disabled. Stopping marker modules...");
         this.getServer().getGlobalRegionScheduler().execute(this, this::stopModules);
     }
 
     private void startModules() {
         this.getSLF4JLogger().info("Starting {} marker module(s)...", this.modules.size());
-
-        for (var module : this.modules) {
-            this.getSLF4JLogger().info("Starting {}...", module.getClass().getSimpleName());
-            module.start();
-        }
-
+        this.modules.forEach(MarkerModule::start);
         this.getSLF4JLogger().info("Marker modules started.");
     }
 
     private void stopModules() {
         this.getSLF4JLogger().info("Stopping {} marker module(s)...", this.modules.size());
-
-        for (var module : this.modules) {
-            this.getSLF4JLogger().info("Stopping {}...", module.getClass().getSimpleName());
-            module.stop();
-        }
-
+        this.modules.forEach(MarkerModule::stop);
         this.getSLF4JLogger().info("Marker modules stopped.");
     }
 }
