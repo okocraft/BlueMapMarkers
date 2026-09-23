@@ -18,6 +18,7 @@ import org.bukkit.plugin.PluginManager;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
 
 import java.util.HashMap;
 import java.util.List;
@@ -33,7 +34,7 @@ class WorldBorderModuleTest {
 
     @Test
     void testLifecycleRegistersListenerSchedulesUpdatesAndCancelsTask() {
-        var plugin = Mockito.mock(BlueMapMarkersPlugin.class);
+        var plugin = plugin();
         var pluginManager = Mockito.mock(PluginManager.class);
         var scheduler = Mockito.mock(GlobalRegionScheduler.class);
         var task = Mockito.mock(ScheduledTask.class);
@@ -68,7 +69,7 @@ class WorldBorderModuleTest {
 
     @Test
     void testUpdateSkipsDisabledWorld() {
-        var plugin = Mockito.mock(BlueMapMarkersPlugin.class);
+        var plugin = plugin();
         var pluginManager = Mockito.mock(PluginManager.class);
         var scheduler = Mockito.mock(GlobalRegionScheduler.class);
         var task = Mockito.mock(ScheduledTask.class);
@@ -105,7 +106,7 @@ class WorldBorderModuleTest {
 
     @Test
     void testUpdatePublishesMarkerSetOnlyToEnabledMaps() {
-        var plugin = Mockito.mock(BlueMapMarkersPlugin.class);
+        var plugin = plugin();
         var pluginManager = Mockito.mock(PluginManager.class);
         var scheduler = Mockito.mock(GlobalRegionScheduler.class);
         var task = Mockito.mock(ScheduledTask.class);
@@ -163,6 +164,12 @@ class WorldBorderModuleTest {
             Assertions.assertFalse(enabledMarkerSets.containsKey("WorldBorder-" + WORLD_ID));
             Assertions.assertTrue(enabledMarkerSets.containsKey("unrelated"));
         }
+    }
+
+    private static BlueMapMarkersPlugin plugin() {
+        var plugin = Mockito.mock(BlueMapMarkersPlugin.class);
+        Mockito.when(plugin.getSLF4JLogger()).thenReturn(Mockito.mock(Logger.class));
+        return plugin;
     }
 
     private static World world(String name, String keyValue) {
