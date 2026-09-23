@@ -31,6 +31,8 @@ public class BlueMapMarkersPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        this.getSLF4JLogger().info("Starting BlueMapMarkers...");
+
         Path configFilepath = this.getDataFolder().toPath().resolve("config.yml");
         if (Files.notExists(configFilepath)) {
             try (InputStream in = this.getResource("config.yml")) {
@@ -68,6 +70,8 @@ public class BlueMapMarkersPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        this.getSLF4JLogger().info("Shutting down BlueMapMarkers...");
+
         BlueMapAPI.unregisterListener(this.blueMapEnableListener);
         BlueMapAPI.unregisterListener(this.blueMapDisableListener);
         this.stopModules();
