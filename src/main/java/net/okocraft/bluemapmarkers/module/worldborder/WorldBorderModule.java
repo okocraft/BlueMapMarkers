@@ -34,24 +34,40 @@ public class WorldBorderModule implements MarkerModule, Listener {
     @Override
     public void init(@NotNull BlueMapMarkersPlugin plugin) {
         this.plugin = plugin;
+        this.plugin.getSLF4JLogger().info("Registering WorldBorder event listeners...");
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
     @Override
     public void start() {
+        this.plugin.getSLF4JLogger().info(
+                "Scheduling WorldBorder marker updates every {} second(s)...",
+                this.setting.updateInterval
+        );
+
         this.updateTask = Bukkit.getGlobalRegionScheduler().runAtFixedRate(
                 this.plugin,
                 ignored -> this.doUpdate(),
                 60L,
                 this.setting.updateInterval * 20L
         );
+
+        this.plugin.getSLF4JLogger().info("WorldBorder update task scheduled.");
     }
 
     @Override
     public void stop() {
         if (this.updateTask != null) {
+            this.plugin.getSLF4JLogger().info("Cancelling WorldBorder update task...");
             this.updateTask.cancel();
             this.updateTask = null;
+        }
+
+        if (!this.rendererMap.isEmpty()) {
+            this.plugin.getSLF4JLogger().info(
+                    "Removing WorldBorder markers and renderers for {} world(s)...",
+                    this.rendererMap.size()
+            );
         }
 
         var api = BlueMapAPI.getInstance().orElse(null);
@@ -73,6 +89,10 @@ public class WorldBorderModule implements MarkerModule, Listener {
         var renderer = this.rendererMap.remove(world.getUID());
 
         if (renderer != null) {
+            this.plugin.getSLF4JLogger().info(
+                    "Cleaning up WorldBorder renderer for unloaded world {}...",
+                    world.getKey().asString()
+            );
             HandlerList.unregisterAll(renderer);
         }
 
@@ -138,6 +158,11 @@ public class WorldBorderModule implements MarkerModule, Listener {
         if (cached != null) {
             return cached;
         }
+
+        this.plugin.getSLF4JLogger().info(
+                "Creating WorldBorder renderer for world {}...",
+                world.getKey().asString()
+        );
 
         var newRenderer = new WorldBorderRenderer(this.setting, world.getUID());
         Bukkit.getPluginManager().registerEvents(newRenderer, this.plugin);
