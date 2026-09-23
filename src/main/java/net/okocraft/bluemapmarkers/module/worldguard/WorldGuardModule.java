@@ -43,19 +43,33 @@ public class WorldGuardModule implements MarkerModule, Listener {
     public void init(@NotNull BlueMapMarkersPlugin plugin) {
         this.plugin = plugin;
         PerWorldTask.logger = plugin.getSLF4JLogger();
+
+        this.plugin.getSLF4JLogger().info("Registering WorldGuard event listeners...");
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
     @Override
     public void start() {
+        this.plugin.getSLF4JLogger().info("Starting WorldGuard module...");
+
         this.started = true;
         for (var world : List.copyOf(Bukkit.getWorlds())) {
             this.startWorld(world);
         }
+
+        this.plugin.getSLF4JLogger().info(
+                "WorldGuard module started with {} active world(s).",
+                this.scheduledTasks.size()
+        );
     }
 
     @Override
     public void stop() {
+        this.plugin.getSLF4JLogger().info(
+                "Stopping WorldGuard module with {} active world(s)...",
+                this.scheduledTasks.size()
+        );
+
         this.started = false;
 
         var api = BlueMapAPI.getInstance().orElse(null);
@@ -67,6 +81,8 @@ public class WorldGuardModule implements MarkerModule, Listener {
 
         this.scheduledTasks.values().forEach(ScheduledTask::cancel);
         this.scheduledTasks.clear();
+
+        this.plugin.getSLF4JLogger().info("WorldGuard module stopped.");
     }
 
     @EventHandler

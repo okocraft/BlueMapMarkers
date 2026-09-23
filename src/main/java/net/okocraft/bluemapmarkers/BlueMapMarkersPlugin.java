@@ -25,14 +25,19 @@ public class BlueMapMarkersPlugin extends JavaPlugin {
     @Override
     public void onLoad() {
         if (this.getServer().getPluginManager().getPlugin("WorldGuard") != null) {
+            this.getSLF4JLogger().info("Registering WorldGuard flags...");
             WorldGuardModule.registerFlags();
         }
     }
 
     @Override
     public void onEnable() {
+        this.getSLF4JLogger().info("Loading config.yml...");
+
         Path configFilepath = this.getDataFolder().toPath().resolve("config.yml");
         if (Files.notExists(configFilepath)) {
+            this.getSLF4JLogger().info("Creating default config.yml...");
+
             try (InputStream in = this.getResource("config.yml")) {
                 if (in == null) {
                     this.getSLF4JLogger().error("Could not find config.yml in the jar file");
@@ -55,22 +60,41 @@ public class BlueMapMarkersPlugin extends JavaPlugin {
         }
 
         if (config.worldBorderSetting.enabled) {
+            this.getSLF4JLogger().info("Initializing WorldBorder module...");
             this.addModule(new WorldBorderModule(config.worldBorderSetting));
+        } else {
+            this.getSLF4JLogger().info("WorldBorder module is disabled.");
         }
 
-        if (config.worldGuardSetting.enabled && this.getServer().getPluginManager().getPlugin("WorldGuard") != null) {
-            this.addModule(new WorldGuardModule(config.worldGuardSetting));
+        if (config.worldGuardSetting.enabled) {
+            if (this.getServer().getPluginManager().getPlugin("WorldGuard") != null) {
+                this.getSLF4JLogger().info("Initializing WorldGuard module...");
+                this.addModule(new WorldGuardModule(config.worldGuardSetting));
+            } else {
+                this.getSLF4JLogger().warn("WorldGuard module is enabled, but WorldGuard is not installed. Skipping the module.");
+            }
+        } else {
+            this.getSLF4JLogger().info("WorldGuard module is disabled.");
         }
 
+        this.getSLF4JLogger().info("Initialized {} marker module(s).", this.modules.size());
+
+        this.getSLF4JLogger().info("Registering BlueMap lifecycle listeners...");
         BlueMapAPI.onDisable(this.blueMapDisableListener);
         BlueMapAPI.onEnable(this.blueMapEnableListener);
+
+        this.getSLF4JLogger().info("Successfully enabled!");
     }
 
     @Override
     public void onDisable() {
+        this.getSLF4JLogger().info("Unregistering BlueMap lifecycle listeners...");
         BlueMapAPI.unregisterListener(this.blueMapEnableListener);
         BlueMapAPI.unregisterListener(this.blueMapDisableListener);
+
         this.stopModules();
+
+        this.getSLF4JLogger().info("Successfully disabled!");
     }
 
     private void addModule(@NotNull MarkerModule module) {
@@ -79,17 +103,24 @@ public class BlueMapMarkersPlugin extends JavaPlugin {
     }
 
     private void onBlueMapEnable(@NotNull BlueMapAPI api) {
-        this.getServer().getGlobalRegionScheduler().execute(
-                this,
-                () -> this.modules.forEach(MarkerModule::start)
-        );
+        this.getSLF4JLogger().info("BlueMap API enabled. Starting marker modules...");
+        this.getServer().getGlobalRegionScheduler().execute(this, this::startModules);
     }
 
     private void onBlueMapDisable(@NotNull BlueMapAPI api) {
+        this.getSLF4JLogger().info("BlueMap API disabled. Stopping marker modules...");
         this.getServer().getGlobalRegionScheduler().execute(this, this::stopModules);
     }
 
+    private void startModules() {
+        this.getSLF4JLogger().info("Starting {} marker module(s)...", this.modules.size());
+        this.modules.forEach(MarkerModule::start);
+        this.getSLF4JLogger().info("Marker modules started.");
+    }
+
     private void stopModules() {
+        this.getSLF4JLogger().info("Stopping {} marker module(s)...", this.modules.size());
         this.modules.forEach(MarkerModule::stop);
+        this.getSLF4JLogger().info("Marker modules stopped.");
     }
 }

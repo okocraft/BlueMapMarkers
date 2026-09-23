@@ -34,21 +34,28 @@ public class WorldBorderModule implements MarkerModule, Listener {
     @Override
     public void init(@NotNull BlueMapMarkersPlugin plugin) {
         this.plugin = plugin;
+        this.plugin.getSLF4JLogger().info("Registering WorldBorder event listeners...");
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
     @Override
     public void start() {
+        this.plugin.getSLF4JLogger().info("Starting WorldBorder module...");
+
         this.updateTask = Bukkit.getGlobalRegionScheduler().runAtFixedRate(
                 this.plugin,
                 ignored -> this.doUpdate(),
                 60L,
                 this.setting.updateInterval * 20L
         );
+
+        this.plugin.getSLF4JLogger().info("WorldBorder module started.");
     }
 
     @Override
     public void stop() {
+        this.plugin.getSLF4JLogger().info("Stopping WorldBorder module...");
+
         if (this.updateTask != null) {
             this.updateTask.cancel();
             this.updateTask = null;
@@ -65,6 +72,8 @@ public class WorldBorderModule implements MarkerModule, Listener {
 
         this.rendererMap.values().forEach(HandlerList::unregisterAll);
         this.rendererMap.clear();
+
+        this.plugin.getSLF4JLogger().info("WorldBorder module stopped.");
     }
 
     @EventHandler

@@ -33,7 +33,7 @@ class WorldGuardModuleTest {
 
     @Test
     void testLifecycleRegistersListenerSchedulesWorldTaskAndCancelsIt() {
-        var plugin = Mockito.mock(BlueMapMarkersPlugin.class);
+        var plugin = plugin();
         var pluginManager = Mockito.mock(PluginManager.class);
         var scheduler = Mockito.mock(GlobalRegionScheduler.class);
         var task = Mockito.mock(ScheduledTask.class);
@@ -82,7 +82,7 @@ class WorldGuardModuleTest {
 
     @Test
     void testStartSkipsDisabledWorldSetting() {
-        var plugin = Mockito.mock(BlueMapMarkersPlugin.class);
+        var plugin = plugin();
         var pluginManager = Mockito.mock(PluginManager.class);
         var scheduler = Mockito.mock(GlobalRegionScheduler.class);
         var world = world("world", "minecraft:overworld");
@@ -107,7 +107,7 @@ class WorldGuardModuleTest {
 
     @Test
     void testStartPrefersWorldNameSettingOverDefault() {
-        var plugin = Mockito.mock(BlueMapMarkersPlugin.class);
+        var plugin = plugin();
         var pluginManager = Mockito.mock(PluginManager.class);
         var scheduler = Mockito.mock(GlobalRegionScheduler.class);
         var task = Mockito.mock(ScheduledTask.class);
@@ -143,7 +143,7 @@ class WorldGuardModuleTest {
 
     @Test
     void testStartUsesWorldKeySettingWhenNameIsNotConfigured() {
-        var plugin = Mockito.mock(BlueMapMarkersPlugin.class);
+        var plugin = plugin();
         var pluginManager = Mockito.mock(PluginManager.class);
         var scheduler = Mockito.mock(GlobalRegionScheduler.class);
         var task = Mockito.mock(ScheduledTask.class);
@@ -210,7 +210,7 @@ class WorldGuardModuleTest {
 
     @Test
     void testScheduledTaskRemovesMarkerSetsAndCancelsWhenWorldDisappears() {
-        var plugin = Mockito.mock(BlueMapMarkersPlugin.class);
+        var plugin = plugin();
         var pluginManager = Mockito.mock(PluginManager.class);
         var scheduler = Mockito.mock(GlobalRegionScheduler.class);
         var task = Mockito.mock(ScheduledTask.class);
@@ -255,6 +255,12 @@ class WorldGuardModuleTest {
             Assertions.assertTrue(markerSets.containsKey("unrelated"));
             Mockito.verify(task, Mockito.times(1)).cancel();
         }
+    }
+
+    private static BlueMapMarkersPlugin plugin() {
+        var plugin = Mockito.mock(BlueMapMarkersPlugin.class);
+        Mockito.when(plugin.getSLF4JLogger()).thenReturn(Mockito.mock(Logger.class));
+        return plugin;
     }
 
     private static World world(String name, String keyValue) {
