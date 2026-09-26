@@ -2,7 +2,7 @@
 
 paper = "26.2.build.124-stable"
 bluemap = "2.8.0"
-worldguard = "7.0.18"
+worldguard = "7.0.19"
 
 configurate = "4.2.0"
 
