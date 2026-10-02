@@ -1,13 +1,13 @@
 [versions]
 
-paper = "26.2.build.129-stable"
+paper = "26.3.build.140-beta"
 bluemap = "2.8.0"
 worldguard = "7.0.19"
 
 configurate = "4.2.0"
 
 junit = "6.1.3"
-mockito = "5.23.0"
+mockito = "5.24.0"
 
 gradle-plugins = "1.8.6"
 
