@@ -93,8 +93,9 @@ abstract class WorldGuardRenderer {
         ObjectMarker marker;
 
         if (this.setting.render3D) {
+            // BlueMap extrudes between the two Y values, while maxY is a block coordinate: the top block spans up to maxY + 1.
             var extrudeMarker = new ExtrudeMarker(
-                    region.getId(), position, renderResult.shape(), renderResult.minY(), renderResult.maxY()
+                    region.getId(), position, renderResult.shape(), renderResult.minY(), renderResult.maxY() + 1
             );
             extrudeMarker.setColors(outlineColor, fillColor);
             marker = extrudeMarker;

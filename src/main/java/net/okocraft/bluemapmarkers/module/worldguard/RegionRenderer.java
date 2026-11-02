@@ -27,10 +27,10 @@ final class RegionRenderer {
         if (region instanceof ProtectedCuboidRegion) {
             return new Result(
                     new Shape(
-                            new Vector2d(min.x(), min.z()),
-                            new Vector2d(max.x() + 1, min.z()),
-                            new Vector2d(max.x() + 1, max.z() + 1),
-                            new Vector2d(min.x(), max.z() + 1)
+                            point(min.x(), min.z()),
+                            point(max.x() + 1, min.z()),
+                            point(max.x() + 1, max.z() + 1),
+                            point(min.x(), max.z() + 1)
                     ), minY, maxY);
         } else if (region instanceof ProtectedPolygonalRegion) {
             var points = region.getPoints();
@@ -72,17 +72,17 @@ final class RegionRenderer {
 
             if (min.x() == max.x()) {
                 return new Vector2d[]{
-                        new Vector2d(min.x(), min.z()),
-                        new Vector2d(max.x(), max.z() + 1),
-                        new Vector2d(max.x() + 1, max.z() + 1),
-                        new Vector2d(min.x() + 1, min.z())
+                        point(min.x(), min.z()),
+                        point(max.x(), max.z() + 1),
+                        point(max.x() + 1, max.z() + 1),
+                        point(min.x() + 1, min.z())
                 };
             } else {
                 return new Vector2d[]{
-                        new Vector2d(min.x(), min.z()),
-                        new Vector2d(max.x() + 1, max.z()),
-                        new Vector2d(max.x() + 1, max.z() + 1),
-                        new Vector2d(min.x(), min.z() + 1)
+                        point(min.x(), min.z()),
+                        point(max.x() + 1, max.z()),
+                        point(max.x() + 1, max.z() + 1),
+                        point(min.x(), min.z() + 1)
                 };
             }
         }
@@ -126,7 +126,7 @@ final class RegionRenderer {
         int outgoingZ = next.z() - cur.z();
 
         double cross = (double) incomingX * outgoingZ - (double) incomingZ * outgoingX;
-        int dot = incomingX * outgoingX + incomingZ * outgoingZ;
+        long dot = (long) incomingX * outgoingX + (long) incomingZ * outgoingZ;
         return cross == 0 && dot < 0;
     }
 
@@ -148,7 +148,7 @@ final class RegionRenderer {
             zCurNew++;
         }
 
-        return new Vector2d(xCurNew, zCurNew);
+        return point(xCurNew, zCurNew);
     }
 
     /**
@@ -175,6 +175,16 @@ final class RegionRenderer {
             area += cross(points.get(i), points.get((i + 1) % points.size()));
         }
         return area / 2.0;
+    }
+
+    /**
+     * Creates a {@link Vector2d} from block coordinates without precision loss.
+     * <p>
+     * {@code new Vector2d(int, int)} resolves to {@code Vector2d(float, float)}, which cannot represent every
+     * block coordinate beyond 2^24 (e.g. {@code 29_999_999} becomes {@code 3.0E7}).
+     */
+    private static Vector2d point(int x, int z) {
+        return new Vector2d((double) x, (double) z);
     }
 
     private RegionRenderer() {
