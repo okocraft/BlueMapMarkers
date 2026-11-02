@@ -74,7 +74,7 @@ class SeparatingWorldGuardRenderer extends WorldGuardRenderer {
             var markerSet = this.separatedMarkerSetMap.get(region.markerSetKey());
 
             if (markerSet != null) {
-                markerSet.remove(region.markerId());
+                removeMarkers(markerSet, region.markerId());
             }
         }
     }

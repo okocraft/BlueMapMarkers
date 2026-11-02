@@ -1,6 +1,7 @@
 package net.okocraft.bluemapmarkers.module.worldguard;
 
 import com.flowpowered.math.vector.Vector3d;
+import com.sk89q.worldedit.math.BlockVector2;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.flags.StateFlag;
@@ -9,6 +10,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.markers.ExtrudeMarker;
 import de.bluecolored.bluemap.api.markers.Marker;
+import de.bluecolored.bluemap.api.markers.MarkerSet;
 import de.bluecolored.bluemap.api.markers.ObjectMarker;
 import de.bluecolored.bluemap.api.markers.ShapeMarker;
 import de.bluecolored.bluemap.api.math.Color;
@@ -17,6 +19,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 abstract class WorldGuardRenderer {
@@ -30,6 +35,7 @@ abstract class WorldGuardRenderer {
     private final RegionColor ownedRegionColor;
     private final RegionColor unownedRegionColor;
     private final DetailFormatter detailFormatter;
+    private final Map<String, CachedRender> renderCache = new HashMap<>();
 
     static void registerFlags() {
         // Invoking this method triggers class initialization and registers the static flag fields.
@@ -77,7 +83,26 @@ abstract class WorldGuardRenderer {
         if (state == StateFlag.State.DENY || (!this.setting.defaultRender && state != StateFlag.State.ALLOW)) {
             return null;
         }
-        return RegionRenderer.render(region);
+
+        // Regions are re-rendered periodically on the main thread; render again only when the shape changed.
+        var markerId = this.createMarkerId(region);
+        var points = region.getPoints();
+        int minY = region.getMinimumPoint().y();
+        int maxY = region.getMaximumPoint().y();
+        var cached = this.renderCache.get(markerId);
+        if (cached != null && cached.minY() == minY && cached.maxY() == maxY && cached.points().equals(points)) {
+            return cached.result();
+        }
+
+        var result = RegionRenderer.render(region);
+        this.renderCache.put(markerId, new CachedRender(points, minY, maxY, result));
+        return result;
+    }
+
+    /** Removes the marker of one region and forgets its cached render. */
+    void removeMarkers(@NotNull MarkerSet markerSet, @NotNull String markerId) {
+        this.renderCache.remove(markerId);
+        markerSet.remove(markerId);
     }
 
     protected @NotNull Marker createMarker(@NotNull ProtectedRegion region,
@@ -125,6 +150,10 @@ abstract class WorldGuardRenderer {
         } catch (NumberFormatException ignored) {
             return defaultColor;
         }
+    }
+
+    private record CachedRender(@NotNull List<BlockVector2> points, int minY, int maxY,
+                                @Nullable RegionRenderer.Result result) {
     }
 
     private record RegionColor(@NotNull Color fillColor, @NotNull Color outlineColor) {

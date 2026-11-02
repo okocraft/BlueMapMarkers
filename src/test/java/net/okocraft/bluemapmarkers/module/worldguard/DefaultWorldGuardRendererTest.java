@@ -155,6 +155,39 @@ class DefaultWorldGuardRendererTest {
     }
 
     @Test
+    void testRenderIfNeededReusesResultForUnchangedRegion() {
+        var renderer = new DefaultWorldGuardRenderer(
+                worldSetting(true, false, "{region_id}"),
+                new MarkerSetSetting("Regions", false, 0, Set.of())
+        );
+        var first = renderer.renderIfNeeded(region("cached"));
+
+        var second = renderer.renderIfNeeded(region("cached"));
+
+        Assertions.assertNotNull(first);
+        Assertions.assertSame(first, second);
+    }
+
+    @Test
+    void testRenderIfNeededRendersAgainWhenRegionShapeChanges() {
+        var renderer = new DefaultWorldGuardRenderer(
+                worldSetting(true, false, "{region_id}"),
+                new MarkerSetSetting("Regions", false, 0, Set.of())
+        );
+        var before = renderer.renderIfNeeded(region("changed"));
+
+        var after = renderer.renderIfNeeded(new ProtectedCuboidRegion(
+                "changed",
+                BlockVector3.at(0, 10, 0),
+                BlockVector3.at(8, 30, 4)
+        ));
+
+        Assertions.assertNotNull(before);
+        Assertions.assertNotNull(after);
+        Assertions.assertNotEquals(before, after);
+    }
+
+    @Test
     void testRemoveRegionsRemovesPublishedMarker() {
         var renderer = new DefaultWorldGuardRenderer(
                 worldSetting(true, false, "{region_id}"),

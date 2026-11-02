@@ -41,7 +41,7 @@ class DefaultWorldGuardRenderer extends WorldGuardRenderer {
     @Override
     void removeRegions(@NotNull Collection<RenderedRegionInfo> regions) {
         for (var region : regions) {
-            this.markerSet.remove(region.markerId());
+            removeMarkers(this.markerSet, region.markerId());
         }
     }
 }
