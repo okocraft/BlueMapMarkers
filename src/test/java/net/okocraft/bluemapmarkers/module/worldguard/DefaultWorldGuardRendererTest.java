@@ -124,10 +124,34 @@ class DefaultWorldGuardRendererTest {
 
         renderer.renderRegion(region("three-d"));
 
-        Assertions.assertInstanceOf(
+        var marker = Assertions.assertInstanceOf(
                 ExtrudeMarker.class,
                 publish(renderer).get("WorldGuard-" + WORLD_ID).get("WorldGuard-three-d")
         );
+        // Blocks y = 10..30 occupy the space from 10.0 up to 31.0.
+        Assertions.assertEquals(10f, marker.getShapeMinY());
+        Assertions.assertEquals(31f, marker.getShapeMaxY());
+    }
+
+    @Test
+    void testRenderRegionExtrudesSingleLayerRegionOneBlockHighWhen3DIsEnabled() {
+        var renderer = new DefaultWorldGuardRenderer(
+                worldSetting(true, true, "{region_id}"),
+                new MarkerSetSetting("Regions", false, 0, Set.of())
+        );
+
+        renderer.renderRegion(new ProtectedCuboidRegion(
+                "single-layer",
+                BlockVector3.at(0, 64, 0),
+                BlockVector3.at(4, 64, 4)
+        ));
+
+        var marker = Assertions.assertInstanceOf(
+                ExtrudeMarker.class,
+                publish(renderer).get("WorldGuard-" + WORLD_ID).get("WorldGuard-single-layer")
+        );
+        Assertions.assertEquals(64f, marker.getShapeMinY());
+        Assertions.assertEquals(65f, marker.getShapeMaxY());
     }
 
     @Test
