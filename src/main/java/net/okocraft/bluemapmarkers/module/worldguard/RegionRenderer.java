@@ -14,7 +14,21 @@ import java.util.List;
 
 final class RegionRenderer {
 
-    record Result(Shape shape, int minY, int maxY) {
+    /**
+     * One connected piece of a rendered region.
+     *
+     * @param shape the outer outline
+     * @param holes outlines of unprotected areas enclosed by {@code shape}
+     */
+    record Area(Shape shape, List<Shape> holes) {
+    }
+
+    /**
+     * @param areas the pieces of the region, never empty
+     * @param minY  the lowest protected block layer
+     * @param maxY  the highest protected block layer
+     */
+    record Result(List<Area> areas, int minY, int maxY) {
     }
 
     static @Nullable Result render(ProtectedRegion region) {
@@ -25,13 +39,13 @@ final class RegionRenderer {
         int maxY = Math.max(min.y(), max.y());
 
         if (region instanceof ProtectedCuboidRegion) {
-            return new Result(
-                    new Shape(
-                            point(min.x(), min.z()),
-                            point(max.x() + 1, min.z()),
-                            point(max.x() + 1, max.z() + 1),
-                            point(min.x(), max.z() + 1)
-                    ), minY, maxY);
+            var shape = new Shape(
+                    point(min.x(), min.z()),
+                    point(max.x() + 1, min.z()),
+                    point(max.x() + 1, max.z() + 1),
+                    point(min.x(), max.z() + 1)
+            );
+            return new Result(List.of(new Area(shape, List.of())), minY, maxY);
         } else if (region instanceof ProtectedPolygonalRegion) {
             var points = region.getPoints();
 
@@ -47,7 +61,8 @@ final class RegionRenderer {
                 pointsRef = ImmutableList.copyOf(points);
             }
 
-            return new Result(new Shape(expandPolygonXZByOne(pointsRef)), minY, maxY);
+            var shape = new Shape(expandPolygonXZByOne(pointsRef));
+            return new Result(List.of(new Area(shape, List.of())), minY, maxY);
         }
 
         return null;

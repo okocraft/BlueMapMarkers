@@ -11,6 +11,7 @@ import de.bluecolored.bluemap.api.markers.ExtrudeMarker;
 import de.bluecolored.bluemap.api.markers.MarkerSet;
 import de.bluecolored.bluemap.api.markers.ShapeMarker;
 import de.bluecolored.bluemap.api.math.Color;
+import de.bluecolored.bluemap.api.math.Shape;
 import net.okocraft.bluemapmarkers.config.MarkerSetSetting;
 import net.okocraft.bluemapmarkers.config.WorldGuardSetting;
 import org.junit.jupiter.api.Assertions;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -202,6 +204,48 @@ class DefaultWorldGuardRendererTest {
     }
 
     @Test
+    void testCreateMarkersCreatesOneMarkerPerAreaWithItsHoles() {
+        var renderer = new DefaultWorldGuardRenderer(
+                worldSetting(true, true, "{region_id}"),
+                new MarkerSetSetting("Regions", false, 0, Set.of())
+        );
+        var result = new RegionRenderer.Result(List.of(
+                new RegionRenderer.Area(Shape.createRect(0, 0, 9, 9), List.of(Shape.createRect(3, 3, 6, 6))),
+                new RegionRenderer.Area(Shape.createRect(20, 0, 21, 1), List.of())
+        ), 10, 30);
+
+        var markers = renderer.createMarkers(region("pieces"), result);
+
+        Assertions.assertEquals(2, markers.size());
+        Assertions.assertEquals(1, Assertions.assertInstanceOf(ExtrudeMarker.class, markers.get(0)).getHoles().size());
+        Assertions.assertEquals(0, Assertions.assertInstanceOf(ExtrudeMarker.class, markers.get(1)).getHoles().size());
+    }
+
+    @Test
+    void testPutMarkersRemovesPiecesThatNoLongerExist() {
+        var markerSet = new MarkerSet("Regions");
+        WorldGuardRenderer.putMarkers(markerSet, "id", List.of(piece(), piece(), piece()));
+
+        WorldGuardRenderer.putMarkers(markerSet, "id", List.of(piece()));
+
+        Assertions.assertEquals(Set.of("id"), markerSet.getMarkers().keySet());
+    }
+
+    @Test
+    void testRemoveMarkersRemovesEveryPiece() {
+        var renderer = new DefaultWorldGuardRenderer(
+                worldSetting(true, false, "{region_id}"),
+                new MarkerSetSetting("Regions", false, 0, Set.of())
+        );
+        var markerSet = new MarkerSet("Regions");
+        WorldGuardRenderer.putMarkers(markerSet, "id", List.of(piece(), piece(), piece()));
+
+        renderer.removeMarkers(markerSet, "id");
+
+        Assertions.assertTrue(markerSet.getMarkers().isEmpty());
+    }
+
+    @Test
     void testRemoveRegionsRemovesPublishedMarker() {
         var renderer = new DefaultWorldGuardRenderer(
                 worldSetting(true, false, "{region_id}"),
@@ -231,6 +275,10 @@ class DefaultWorldGuardRendererTest {
                 BlockVector3.at(0, 10, 0),
                 BlockVector3.at(4, 30, 4)
         );
+    }
+
+    private static ShapeMarker piece() {
+        return new ShapeMarker("piece", Shape.createRect(0, 0, 1, 1), 64f);
     }
 
     private static StateFlag stateFlag(String name) {

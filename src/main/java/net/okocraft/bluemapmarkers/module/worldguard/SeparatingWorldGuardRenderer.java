@@ -41,7 +41,7 @@ class SeparatingWorldGuardRenderer extends WorldGuardRenderer {
         var markerId = super.createMarkerId(region);
         var markerSetKey = this.getMarkerSetKey(region.getMinimumPoint());
         var markerSet = this.separatedMarkerSetMap.computeIfAbsent(markerSetKey, this::createMarkerSet);
-        markerSet.put(markerId, super.createMarker(region, renderResult));
+        putMarkers(markerSet, markerId, super.createMarkers(region, renderResult));
         return new RenderedRegionInfo(markerId, markerSetKey);
     }
 

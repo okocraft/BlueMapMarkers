@@ -26,7 +26,7 @@ class DefaultWorldGuardRenderer extends WorldGuardRenderer {
 
         if (renderResult != null) {
             var markerId = super.createMarkerId(region);
-            this.markerSet.put(markerId, super.createMarker(region, renderResult));
+            putMarkers(this.markerSet, markerId, super.createMarkers(region, renderResult));
             return new RenderedRegionInfo(markerId, 0);
         } else {
             return null;
