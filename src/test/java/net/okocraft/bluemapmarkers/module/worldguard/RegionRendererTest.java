@@ -68,13 +68,47 @@ class RegionRendererTest {
     }
 
     @Test
-    void testRenderPolygonHandlesLargeCoordinatesWithoutIntegerOverflow() {
+    void testRenderPolygonDrawsDiagonalEdgeAsBlockStaircase() {
         var region = new ProtectedPolygonalRegion(
-                "large",
+                "diagonal",
                 List.of(
                         BlockVector2.at(0, 0),
-                        BlockVector2.at(50_000, 0),
-                        BlockVector2.at(0, 50_000)
+                        BlockVector2.at(3, 0),
+                        BlockVector2.at(0, 3)
+                ),
+                0,
+                10
+        );
+
+        var result = RegionRenderer.render(region);
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(1, result.areas().size());
+        Assertions.assertArrayEquals(
+                new Vector2d[]{
+                        new Vector2d(0, 0),
+                        new Vector2d(4, 0),
+                        new Vector2d(4, 1),
+                        new Vector2d(3, 1),
+                        new Vector2d(3, 2),
+                        new Vector2d(2, 2),
+                        new Vector2d(2, 3),
+                        new Vector2d(1, 3),
+                        new Vector2d(1, 4),
+                        new Vector2d(0, 4)
+                },
+                result.areas().getFirst().shape().getPoints()
+        );
+    }
+
+    @Test
+    void testRenderPolygonDrawsStraightEdgesWhenTooWideToRasterize() {
+        var region = new ProtectedPolygonalRegion(
+                "huge",
+                List.of(
+                        BlockVector2.at(0, 0),
+                        BlockVector2.at(1_000_000, 0),
+                        BlockVector2.at(0, 1_000_000)
                 ),
                 0,
                 10
@@ -86,8 +120,8 @@ class RegionRendererTest {
         Assertions.assertArrayEquals(
                 new Vector2d[]{
                         new Vector2d(0, 0),
-                        new Vector2d(50_001, 1),
-                        new Vector2d(1, 50_001)
+                        new Vector2d(1_000_000, 0),
+                        new Vector2d(0, 1_000_000)
                 },
                 result.areas().getFirst().shape().getPoints()
         );
@@ -112,9 +146,9 @@ class RegionRendererTest {
         Assertions.assertArrayEquals(
                 new Vector2d[]{
                         new Vector2d(1, 1),
-                        new Vector2d(1, 4),
+                        new Vector2d(2, 1),
                         new Vector2d(2, 4),
-                        new Vector2d(2, 1)
+                        new Vector2d(1, 4)
                 },
                 result.areas().getFirst().shape().getPoints()
         );
