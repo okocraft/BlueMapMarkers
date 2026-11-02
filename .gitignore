@@ -4,3 +4,6 @@
 
 build
 .gradle
+
+# verification tooling
+node_modules

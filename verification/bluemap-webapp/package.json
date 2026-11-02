@@ -1,0 +1,12 @@
+{
+  "name": "bluemapmarkers-webapp-check",
+  "private": true,
+  "type": "module",
+  "description": "FV-002: reproduces BlueMap webapp marker geometry and compares it with WorldGuard",
+  "scripts": {
+    "check": "node check.mjs"
+  },
+  "dependencies": {
+    "three": "0.186.1"
+  }
+}

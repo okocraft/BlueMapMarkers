@@ -264,7 +264,7 @@ class RegionRendererCoverageTest {
      * {@code size} grid that has no diagonal pinch, i.e. every simple rectilinear polygon of that extent. Each
      * outline contains every integer point on its boundary (unit steps).
      */
-    private static List<List<BlockVector2>> enumerateRectilinearOutlines(int size) {
+    static List<List<BlockVector2>> enumerateRectilinearOutlines(int size) {
         List<List<BlockVector2>> outlines = new ArrayList<>();
         for (int mask = 1; mask < (1 << (size * size)); mask++) {
             if (isSimplePolyomino(mask, size)) {
@@ -368,7 +368,7 @@ class RegionRendererCoverageTest {
         return new ProtectedPolygonalRegion("polygon", points, MIN_Y, MAX_Y);
     }
 
-    private static List<BlockVector2> removeStraightThroughVertices(List<BlockVector2> points) {
+    static List<BlockVector2> removeStraightThroughVertices(List<BlockVector2> points) {
         List<BlockVector2> result = new ArrayList<>();
         int size = points.size();
         for (int i = 0; i < size; i++) {
@@ -429,7 +429,7 @@ class RegionRendererCoverageTest {
         return result;
     }
 
-    private static List<BlockVector2> reversed(List<BlockVector2> points) {
+    static List<BlockVector2> reversed(List<BlockVector2> points) {
         List<BlockVector2> result = new ArrayList<>(points);
         java.util.Collections.reverse(result);
         return result;
@@ -443,7 +443,7 @@ class RegionRendererCoverageTest {
         return result;
     }
 
-    private static List<BlockVector2> translate(List<BlockVector2> points, int dx, int dz) {
+    static List<BlockVector2> translate(List<BlockVector2> points, int dx, int dz) {
         return points.stream().map(p -> BlockVector2.at(p.x() + dx, p.z() + dz)).toList();
     }
 
