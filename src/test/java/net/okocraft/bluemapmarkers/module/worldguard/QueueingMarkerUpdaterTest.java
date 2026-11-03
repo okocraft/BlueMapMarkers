@@ -3,13 +3,16 @@ package net.okocraft.bluemapmarkers.module.worldguard;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 class QueueingMarkerUpdaterTest {
 
@@ -113,6 +116,31 @@ class QueueingMarkerUpdaterTest {
 
         Assertions.assertTrue(updater.doUpdate(renderer, regionManager));
         Mockito.verify(renderer).removeRegions(Mockito.argThat(removed -> removed.isEmpty()));
+    }
+
+    @Test
+    void testUpdateStopsWhenTimeBudgetIsUsedUp() {
+        var regions = new LinkedHashMap<String, com.sk89q.worldguard.protection.regions.ProtectedRegion>();
+        for (var id : List.of("first", "second", "third", "fourth")) {
+            regions.put(id, region(id));
+        }
+
+        var regionManager = regionManager(regions);
+        var renderer = Mockito.mock(WorldGuardRenderer.class);
+        // Each region takes 6 ms, so the 10 ms budget is used up after two regions.
+        long[] now = {0};
+        Mockito.when(renderer.renderRegion(Mockito.any())).thenAnswer(invocation -> {
+            now[0] += TimeUnit.MILLISECONDS.toNanos(6);
+            return new RenderedRegionInfo(invocation.getArgument(0, ProtectedRegion.class).getId(), 0);
+        });
+
+        var updater = new QueueingMarkerUpdater(10, () -> now[0]);
+
+        Assertions.assertFalse(updater.doUpdate(renderer, regionManager));
+        Mockito.verify(renderer, Mockito.times(2)).renderRegion(Mockito.any());
+
+        Assertions.assertTrue(updater.doUpdate(renderer, regionManager));
+        Mockito.verify(renderer, Mockito.times(4)).renderRegion(Mockito.any());
     }
 
     private static RegionManager regionManager(
