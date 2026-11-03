@@ -102,6 +102,59 @@ class RegionRendererTest {
     }
 
     @Test
+    void testRenderPolygonDrawsTooLongLineOneBlockWide() {
+        var region = new ProtectedPolygonalRegion(
+                "line",
+                List.of(BlockVector2.at(0, 0), BlockVector2.at(100_001, 100_001), BlockVector2.at(200_002, 200_002)),
+                0,
+                10
+        );
+
+        var result = RegionRenderer.render(region);
+
+        Assertions.assertNotNull(result);
+        Assertions.assertArrayEquals(
+                new Vector2d[]{
+                        new Vector2d(0, 0), new Vector2d(1, 0),
+                        new Vector2d(200_003, 200_002), new Vector2d(200_003, 200_003),
+                        new Vector2d(200_002, 200_003), new Vector2d(0, 1)
+                },
+                result.areas().getFirst().shape().getPoints()
+        );
+    }
+
+    @Test
+    void testRenderPolygonDrawsStraightEdgesWhenTooManyEdgesToRasterize() {
+        // 50,000 columns with 200 edges each: within the column limit, over the edge-check limit.
+        List<BlockVector2> points = new java.util.ArrayList<>();
+        for (int i = 0; i < 200; i++) {
+            points.add(BlockVector2.at(i * 250, i % 2 == 0 ? 0 : 1_000));
+        }
+        points.add(BlockVector2.at(49_750, -1_000));
+
+        var result = RegionRenderer.render(new ProtectedPolygonalRegion("saw", points, 0, 10));
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(points.size(), result.areas().getFirst().shape().getPoints().length);
+    }
+
+    @Test
+    void testRenderPolygonDrawsStraightEdgesWhenOutlineIsTooLong() {
+        // Three parallel diagonal arms over 4,000 columns: within both cost limits, but 12,000 ranges.
+        int l = 4_000;
+        var points = List.of(
+                BlockVector2.at(0, 0), BlockVector2.at(l, l), BlockVector2.at(l, l + 500), BlockVector2.at(10, 510),
+                BlockVector2.at(10, 1_000), BlockVector2.at(l, l + 1_000), BlockVector2.at(l, l + 1_500), BlockVector2.at(10, 1_510),
+                BlockVector2.at(10, 2_000), BlockVector2.at(l, l + 2_000), BlockVector2.at(l, l + 2_500), BlockVector2.at(0, 2_500)
+        );
+
+        var result = RegionRenderer.render(new ProtectedPolygonalRegion("arms", points, 0, 10));
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(points.size(), result.areas().getFirst().shape().getPoints().length);
+    }
+
+    @Test
     void testRenderPolygonDrawsStraightEdgesWhenTooWideToRasterize() {
         var region = new ProtectedPolygonalRegion(
                 "huge",

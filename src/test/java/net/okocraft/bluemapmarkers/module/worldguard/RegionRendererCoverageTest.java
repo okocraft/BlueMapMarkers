@@ -281,11 +281,11 @@ class RegionRendererCoverageTest {
     @Test
     void testLongDiagonalEdgeCoverageNearWorldBorder() {
         int x0 = -30_000_000;
-        int z0 = 29_979_999;
+        int z0 = 29_994_999;
         var region = polygon(List.of(
                 BlockVector2.at(x0, z0),
-                BlockVector2.at(x0 + 20_000, z0 + 7_001),
-                BlockVector2.at(x0 + 3, z0 + 20_000)
+                BlockVector2.at(x0 + 5_000, z0 + 1_751),
+                BlockVector2.at(x0 + 3, z0 + 5_000)
         ));
         var result = RegionRenderer.render(region);
         Assertions.assertNotNull(result);
@@ -293,11 +293,11 @@ class RegionRendererCoverageTest {
         var random = new Random(7L);
         List<int[]> blocks = new ArrayList<>();
         for (int i = 0; i < 2_000; i++) {
-            blocks.add(new int[]{x0 - 2 + random.nextInt(20_005), z0 - 2 + random.nextInt(20_005)});
+            blocks.add(new int[]{x0 - 2 + random.nextInt(5_005), z0 - 2 + random.nextInt(5_005)});
         }
         // Blocks along the long diagonal edge, where a straight outline would differ from the protected staircase.
-        for (int x = x0; x <= x0 + 20_000; x += 97) {
-            long z = z0 + Math.floorDiv(7_001L * (x - x0), 20_000);
+        for (int x = x0; x <= x0 + 5_000; x += 23) {
+            long z = z0 + Math.floorDiv(1_751L * (x - x0), 5_000);
             for (int dz = -2; dz <= 2; dz++) {
                 blocks.add(new int[]{x, (int) (z + dz)});
             }

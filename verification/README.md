@@ -19,9 +19,10 @@ A record only covers the property, domain and assumptions written in it.
 - Preconditions:
   - `ProtectedCuboidRegion`, or any `ProtectedPolygonalRegion` with at least 3 points: diagonal edges,
     self-intersections, collinear and repeated points are all in scope.
-  - The polygon needs at most `RegionRenderer.MAX_EVALUATED_COLUMNS` (100,000) columns evaluated one by one (columns
-    spanned by a sloped edge). Wider polygons are intentionally drawn with straight edges through their vertices and
-    are not exact.
+  - The polygon is within the cost limits `RegionRenderer.MAX_EVALUATED_COLUMNS` (100,000 columns evaluated one by
+    one), `MAX_EDGE_CHECKS` (5,000,000 = evaluated columns × edges) and `MAX_RANGES` (10,000 protected z ranges, which
+    bounds the outline length). Larger polygons are intentionally drawn with straight edges through their vertices
+    (one block wide if all vertices are collinear) and are not exact.
   - Block coordinates within the Minecraft world limits, `[-30,000,000, 29,999,999]`.
 - Scope (all in `RegionRendererCoverageTest`):
   - Cuboids: every pair of corners in `[-2, 2]^2`, at the origin and translated to three world-border corners.
@@ -34,15 +35,15 @@ A record only covers the property, domain and assumptions written in it.
   - Random polygons: 3,000 polygons with 3–12 vertices in a 24×24 box at random world positions (fixed seed).
   - Collapsed polygons: every horizontal / vertical sequence of 3 or 4 points with offsets in `[0, 3]`, at every translation.
   - Named cases: a backtracking spike, a pentagram (three separate block groups), a self-intersecting ring (one hole),
-    and a triangle with a 20,000-block diagonal edge near the world border (4,000+ sampled blocks).
+    and a triangle with a 5,000-block diagonal edge near the world border (3,000+ sampled blocks).
   - Redundant-vertex property: every simple polyomino in a 3×3 grid scaled by 2, 1,000, 50,000 and 2,000,000.
   - Oracle: WorldGuard 7.0.20 `ProtectedRegion#contains` (independent implementation, counts boundary points as inside).
 - Out of scope:
   - How BlueMap's web client triangulates and draws the shapes (the claim stops at the `Shape` vertex lists).
   - Marker creation/update in `WorldGuardRenderer` beyond its unit tests, scheduling and concurrency.
   - Coordinates outside the world limits.
-  - Rendering cost: the outline of a long diagonal edge has about two vertices per block of its length. Results are
-    cached per region and recomputed only when its points or Y range change.
+  - Rendering cost: bounded by the limits above (about 20–40 ms per region at the limits, measured locally). Results
+    are cached per region and recomputed only when its points or Y range change.
 - Method/tool: Bounded-exhaustive JUnit Jupiter tests (JUnit version from `gradle/libs.versions.toml`), Java 25.
   Deductive/bounded-model-checking tools were not used: the production code targets Java 25 bytecode and depends on
   Guava, WorldEdit and BlueMap API types, while JBMC still documents a Java 8 build/bytecode baseline and the OpenJML

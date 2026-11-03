@@ -24,13 +24,17 @@ import java.util.Map;
  * self-intersecting polygons are drawn as the blocks WorldGuard actually protects. A region whose blocks form several
  * separate pieces yields one {@link Area} per piece; enclosed unprotected blocks become holes.
  *
- * <p>Sloped edges are evaluated one column at a time. A polygon that would need more than
- * {@link #MAX_EVALUATED_COLUMNS} such columns is drawn with straight edges through its vertices instead, which is
- * approximate but keeps the cost independent of its size.
+ * <p>Rendering runs on the main thread, so its cost is bounded: a polygon that exceeds one of the {@code MAX_*} limits
+ * is drawn with straight edges through its vertices instead, which is approximate.
  */
 final class RegionRenderer {
 
+    /** Columns evaluated one by one (columns spanned by a sloped edge, plus one per vertex x). */
     static final int MAX_EVALUATED_COLUMNS = 100_000;
+    /** Evaluated columns multiplied by the number of polygon edges, each of which is checked in every column. */
+    static final long MAX_EDGE_CHECKS = 5_000_000;
+    /** Protected z ranges over all column runs; tracing costs about four outline corners per range. */
+    static final int MAX_RANGES = 10_000;
 
     /**
      * One connected piece of a rendered region.
@@ -73,8 +77,7 @@ final class RegionRenderer {
 
             var runs = rasterize(points);
             if (runs == null) {
-                var outline = new Shape(points.stream().map(p -> point(p.x(), p.z())).toList());
-                return new Result(List.of(new Area(outline, List.of())), minY, maxY);
+                return new Result(List.of(new Area(approximate(points), List.of())), minY, maxY);
             }
 
             var areas = traceAreas(runs);
@@ -94,7 +97,7 @@ final class RegionRenderer {
     private record ColumnRun(int x0, int x1, int[] intervals) {
     }
 
-    /** Returns {@code null} if more than {@link #MAX_EVALUATED_COLUMNS} columns would be evaluated. */
+    /** Returns {@code null} if the polygon exceeds one of the {@code MAX_*} limits. */
     private static @Nullable List<ColumnRun> rasterize(List<BlockVector2> points) {
         int size = points.size();
         int[] xs = new int[size];
@@ -113,6 +116,9 @@ final class RegionRenderer {
         }
 
         int[] vertexXs = Arrays.stream(xs).distinct().sorted().toArray();
+        if ((long) vertexXs.length * size > MAX_EDGE_CHECKS) {
+            return null; // checked first, as finding the sloped columns below already costs this much
+        }
         long evaluatedColumns = vertexXs.length;
         for (int i = 0; i + 1 < vertexXs.length; i++) {
             int from = vertexXs[i] + 1;
@@ -121,7 +127,7 @@ final class RegionRenderer {
                 evaluatedColumns += to - from + 1;
             }
         }
-        if (evaluatedColumns > MAX_EVALUATED_COLUMNS) {
+        if (evaluatedColumns > MAX_EVALUATED_COLUMNS || evaluatedColumns * size > MAX_EDGE_CHECKS) {
             return null;
         }
 
@@ -148,7 +154,48 @@ final class RegionRenderer {
             }
         }
 
-        return runs;
+        long ranges = 0;
+        for (var run : runs) {
+            ranges += run.intervals().length / 2;
+        }
+        return ranges > MAX_RANGES ? null : runs;
+    }
+
+    /**
+     * Draws the polygon with straight edges through its vertices. If all vertices lie on one line, the outline would
+     * have no area, so the line is drawn one block wide instead.
+     */
+    private static Shape approximate(List<BlockVector2> points) {
+        var low = points.getFirst();
+        var high = low;
+        for (var p : points) {
+            if (p.x() < low.x() || p.x() == low.x() && p.z() < low.z()) {
+                low = p;
+            }
+            if (p.x() > high.x() || p.x() == high.x() && p.z() > high.z()) {
+                high = p;
+            }
+        }
+        boolean collinear = true;
+        for (var p : points) {
+            collinear &= (long) (high.x() - low.x()) * (p.z() - low.z()) == (long) (high.z() - low.z()) * (p.x() - low.x());
+        }
+        if (!collinear) {
+            return new Shape(points.stream().map(p -> point(p.x(), p.z())).toList());
+        }
+        // Outline of the blocks swept from low to high; low is west of (or north of) high.
+        if (low.z() <= high.z()) {
+            return new Shape(
+                    point(low.x(), low.z()), point(low.x() + 1, low.z()),
+                    point(high.x() + 1, high.z()), point(high.x() + 1, high.z() + 1),
+                    point(high.x(), high.z() + 1), point(low.x(), low.z() + 1)
+            );
+        }
+        return new Shape(
+                point(low.x(), low.z()), point(high.x(), high.z()),
+                point(high.x() + 1, high.z()), point(high.x() + 1, high.z() + 1),
+                point(low.x() + 1, low.z() + 1), point(low.x(), low.z() + 1)
+        );
     }
 
     private static void addColumn(List<ColumnRun> runs, int x0, int x1, int[] intervals) {
