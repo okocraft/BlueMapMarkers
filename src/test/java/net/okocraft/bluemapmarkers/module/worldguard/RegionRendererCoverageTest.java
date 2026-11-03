@@ -100,7 +100,7 @@ class RegionRendererCoverageTest {
                         new Vector2d(30_000_000, 30_000_000),
                         new Vector2d(-30_000_000, 30_000_000)
                 },
-                result.shape().getPoints()
+                result.areas().getFirst().shape().getPoints()
         );
     }
 
@@ -198,8 +198,8 @@ class RegionRendererCoverageTest {
                     Assertions.assertNotNull(expected);
                     Assertions.assertNotNull(actual);
                     Assertions.assertEquals(
-                            Arrays.asList(expected.shape().getPoints()),
-                            removeStraightThroughPoints(Arrays.asList(actual.shape().getPoints())),
+                            Arrays.asList(expected.areas().getFirst().shape().getPoints()),
+                            removeStraightThroughPoints(Arrays.asList(actual.areas().getFirst().shape().getPoints())),
                             () -> "outline changed by redundant midpoints: " + withMidpoints
                     );
                 }
@@ -218,7 +218,7 @@ class RegionRendererCoverageTest {
         Assertions.assertEquals(min.y(), result.minY(), () -> describe(region));
         Assertions.assertEquals(max.y(), result.maxY(), () -> describe(region));
 
-        Vector2d[] shape = result.shape().getPoints();
+        Vector2d[] shape = result.areas().getFirst().shape().getPoints();
         for (int x = min.x() - 2; x <= max.x() + 2; x++) {
             for (int z = min.z() - 2; z <= max.z() + 2; z++) {
                 boolean expected = region.contains(BlockVector3.at(x, min.y(), z));

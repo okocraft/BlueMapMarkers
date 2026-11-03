@@ -33,7 +33,7 @@ class RegionRendererTest {
                         new Vector2d(4, 5),
                         new Vector2d(1, 5)
                 },
-                result.shape().getPoints()
+                result.areas().getFirst().shape().getPoints()
         );
     }
 
@@ -63,7 +63,7 @@ class RegionRendererTest {
                         new Vector2d(3, 3),
                         new Vector2d(0, 3)
                 },
-                result.shape().getPoints()
+                result.areas().getFirst().shape().getPoints()
         );
     }
 
@@ -89,7 +89,7 @@ class RegionRendererTest {
                         new Vector2d(50_001, 1),
                         new Vector2d(1, 50_001)
                 },
-                result.shape().getPoints()
+                result.areas().getFirst().shape().getPoints()
         );
     }
 
@@ -116,7 +116,7 @@ class RegionRendererTest {
                         new Vector2d(2, 4),
                         new Vector2d(2, 1)
                 },
-                result.shape().getPoints()
+                result.areas().getFirst().shape().getPoints()
         );
     }
 
@@ -138,7 +138,7 @@ class RegionRendererTest {
         var result = RegionRenderer.render(region);
 
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(6, result.shape().getPointCount());
+        Assertions.assertEquals(6, result.areas().getFirst().shape().getPointCount());
     }
 
     @Test
