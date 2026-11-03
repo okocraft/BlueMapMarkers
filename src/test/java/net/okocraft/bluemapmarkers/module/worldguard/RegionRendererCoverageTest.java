@@ -15,14 +15,15 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 /**
  * Bounded-exhaustive checks for the claim FV-001 recorded in {@code verification/README.md}.
  *
- * <p>Claim: for every supported region in the enumerated domain, a block column {@code (x, z)} is drawn by the
- * rendered BlueMap shape (winding number around the block centre {@code (x + 0.5, z + 0.5)} is non-zero) if and only
- * if WorldGuard reports that the region contains the block, and the shape never covers a block twice
- * (|winding number| &lt;= 1).
+ * <p>Claim: for every region in the enumerated domains, a block column {@code (x, z)} is drawn by the rendered BlueMap
+ * areas (inside exactly one outer outline and none of its holes, tested at the block centre
+ * {@code (x + 0.5, z + 0.5)}) if and only if WorldGuard reports that the region contains the block. No block is covered
+ * by two areas, and no outline winds around a block more than once.
  *
  * <p>WorldGuard's own {@code contains} implementation is used as the oracle, so the expected value is computed
  * independently of {@link RegionRenderer}. These are executed tests over finite domains, not a proof.
@@ -173,12 +174,142 @@ class RegionRendererCoverageTest {
         assertCoverageMatches(region);
     }
 
+    // ---- Diagonal edges, self-intersections and repeated points ----------------------------------------------
+
+    @Test
+    void testEveryTriangleCoverageEqualsWorldGuardContains() {
+        int size = 6;
+        int checked = 0;
+        for (int a = 0; a < size * size; a++) {
+            for (int b = a + 1; b < size * size; b++) {
+                for (int c = b + 1; c < size * size; c++) {
+                    var points = List.of(
+                            BlockVector2.at(a % size, a / size),
+                            BlockVector2.at(b % size, b / size),
+                            BlockVector2.at(c % size, c / size)
+                    );
+                    for (int[] t : TRANSLATIONS) {
+                        assertCoverageMatches(polygon(translate(points, t[0], t[1])));
+                        checked++;
+                    }
+                }
+            }
+        }
+        Assertions.assertEquals(TRANSLATIONS.length * 7140, checked);
+    }
+
+    /** Every sequence of four points in a 4x4 grid: self-intersecting, collinear, repeated and diagonal cases. */
+    @Test
+    void testEveryQuadrilateralCoverageEqualsWorldGuardContains() {
+        int size = 4;
+        int cells = size * size;
+        int[][] translations = {{0, 0}, {29_999_990, -30_000_000}};
+        int checked = 0;
+        for (int code = 0; code < cells * cells * cells * cells; code++) {
+            var points = new ArrayList<BlockVector2>(4);
+            for (int i = 0, c = code; i < 4; i++, c /= cells) {
+                points.add(BlockVector2.at(c % cells % size, c % cells / size));
+            }
+            for (int[] t : translations) {
+                assertCoverageMatches(polygon(translate(points, t[0], t[1])));
+                checked++;
+            }
+        }
+        Assertions.assertEquals(2 * 65_536, checked);
+    }
+
+    /** Seeded random polygons with 3 to 12 vertices, so that failures are reproducible. */
+    @Test
+    void testRandomPolygonCoverageEqualsWorldGuardContains() {
+        var random = new Random(20261102L);
+        for (int i = 0; i < 3_000; i++) {
+            int dx = random.nextInt(-30_000_000, 29_999_970);
+            int dz = random.nextInt(-30_000_000, 29_999_970);
+            int count = random.nextInt(3, 13);
+            var points = new ArrayList<BlockVector2>(count);
+            for (int k = 0; k < count; k++) {
+                points.add(BlockVector2.at(dx + random.nextInt(24), dz + random.nextInt(24)));
+            }
+            assertCoverageMatches(polygon(points));
+        }
+    }
+
+    @Test
+    void testSelfIntersectingStarIsSplitIntoTheBlockGroupsWorldGuardProtects() {
+        // A pentagram: WorldGuard uses crossing parity, so the pentagon in the middle is not protected, and at block
+        // resolution the two lower points are not connected to the rest.
+        var region = polygon(List.of(
+                BlockVector2.at(15, 0),
+                BlockVector2.at(24, 28),
+                BlockVector2.at(1, 10),
+                BlockVector2.at(29, 10),
+                BlockVector2.at(6, 28)
+        ));
+        Assertions.assertFalse(region.contains(BlockVector3.at(15, MIN_Y, 16)));
+
+        assertCoverageMatches(region);
+        var result = RegionRenderer.render(region);
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(3, result.areas().size());
+    }
+
+    @Test
+    void testSelfIntersectingRingKeepsUnprotectedCentreAsHole() {
+        // Outer square, a connecting edge, then an inner square in the same direction: crossing parity leaves the
+        // inner square unprotected.
+        var region = polygon(List.of(
+                BlockVector2.at(0, 0),
+                BlockVector2.at(12, 0),
+                BlockVector2.at(12, 12),
+                BlockVector2.at(0, 12),
+                BlockVector2.at(0, 0),
+                BlockVector2.at(3, 3),
+                BlockVector2.at(9, 3),
+                BlockVector2.at(9, 9),
+                BlockVector2.at(3, 9),
+                BlockVector2.at(3, 3)
+        ));
+        Assertions.assertFalse(region.contains(BlockVector3.at(6, MIN_Y, 6)));
+
+        assertCoverageMatches(region);
+        var result = RegionRenderer.render(region);
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(1, result.areas().size());
+        Assertions.assertEquals(1, result.areas().getFirst().holes().size());
+    }
+
+    @Test
+    void testLongDiagonalEdgeCoverageNearWorldBorder() {
+        int x0 = -30_000_000;
+        int z0 = 29_994_999;
+        var region = polygon(List.of(
+                BlockVector2.at(x0, z0),
+                BlockVector2.at(x0 + 5_000, z0 + 1_751),
+                BlockVector2.at(x0 + 3, z0 + 5_000)
+        ));
+        var result = RegionRenderer.render(region);
+        Assertions.assertNotNull(result);
+
+        var random = new Random(7L);
+        List<int[]> blocks = new ArrayList<>();
+        for (int i = 0; i < 2_000; i++) {
+            blocks.add(new int[]{x0 - 2 + random.nextInt(5_005), z0 - 2 + random.nextInt(5_005)});
+        }
+        // Blocks along the long diagonal edge, where a straight outline would differ from the protected staircase.
+        for (int x = x0; x <= x0 + 5_000; x += 23) {
+            long z = z0 + Math.floorDiv(1_751L * (x - x0), 5_000);
+            for (int dz = -2; dz <= 2; dz++) {
+                blocks.add(new int[]{x, (int) (z + dz)});
+            }
+        }
+        assertCoverageMatches(region, result, blocks);
+    }
+
     // ---- Long edges (arithmetic range) ----------------------------------------------------------------------
 
     /**
-     * Metamorphic property for long edges, where the block-by-block oracle is too expensive: inserting a redundant
-     * vertex in the middle of every edge must not change the rendered outline except for the corresponding
-     * redundant (straight-through) vertices. Exercises edge vectors whose dot product exceeds {@code int} range.
+     * Metamorphic property for long edges: inserting a redundant vertex in the middle of every edge does not change
+     * the protected blocks, so it must not change the rendered areas.
      */
     @Test
     void testRedundantMidpointsDoNotChangeOutlineOfLongEdges() {
@@ -198,8 +329,8 @@ class RegionRendererCoverageTest {
                     Assertions.assertNotNull(expected);
                     Assertions.assertNotNull(actual);
                     Assertions.assertEquals(
-                            Arrays.asList(expected.areas().getFirst().shape().getPoints()),
-                            removeStraightThroughPoints(Arrays.asList(actual.areas().getFirst().shape().getPoints())),
+                            expected.areas(),
+                            actual.areas(),
                             () -> "outline changed by redundant midpoints: " + withMidpoints
                     );
                 }
@@ -215,28 +346,69 @@ class RegionRendererCoverageTest {
 
         BlockVector3 min = region.getMinimumPoint();
         BlockVector3 max = region.getMaximumPoint();
-        Assertions.assertEquals(min.y(), result.minY(), () -> describe(region));
-        Assertions.assertEquals(max.y(), result.maxY(), () -> describe(region));
-
-        Vector2d[] shape = result.areas().getFirst().shape().getPoints();
+        List<int[]> blocks = new ArrayList<>();
         for (int x = min.x() - 2; x <= max.x() + 2; x++) {
             for (int z = min.z() - 2; z <= max.z() + 2; z++) {
-                boolean expected = region.contains(BlockVector3.at(x, min.y(), z));
-                int winding = windingNumber(shape, x + 0.5, z + 0.5);
-                int bx = x;
-                int bz = z;
-                Assertions.assertTrue(
-                        Math.abs(winding) <= 1,
-                        () -> "block (" + bx + ", " + bz + ") covered " + winding + " times: " + describe(region)
-                                + " -> " + Arrays.toString(shape)
-                );
-                Assertions.assertEquals(
-                        expected, winding != 0,
-                        () -> "block (" + bx + ", " + bz + ") expected " + (expected ? "inside" : "outside") + ": "
-                                + describe(region) + " -> " + Arrays.toString(shape)
-                );
+                blocks.add(new int[]{x, z});
             }
         }
+        assertCoverageMatches(region, result, blocks);
+    }
+
+    private static void assertCoverageMatches(ProtectedRegion region, RegionRenderer.Result result, List<int[]> blocks) {
+        BlockVector3 min = region.getMinimumPoint();
+        BlockVector3 max = region.getMaximumPoint();
+        Assertions.assertEquals(min.y(), result.minY(), () -> describe(region));
+        Assertions.assertEquals(max.y(), result.maxY(), () -> describe(region));
+        Assertions.assertFalse(result.areas().isEmpty(), () -> describe(region));
+
+        for (int[] block : blocks) {
+            boolean expected = region.contains(BlockVector3.at(block[0], min.y(), block[1]));
+            double px = block[0] + 0.5;
+            double pz = block[1] + 0.5;
+            int covering = 0;
+            for (var area : result.areas()) {
+                boolean inOuter = isInside(area.shape().getPoints(), px, pz, region, block);
+                boolean inHole = false;
+                for (var hole : area.holes()) {
+                    if (isInside(hole.getPoints(), px, pz, region, block)) {
+                        Assertions.assertTrue(inOuter, () -> "hole outside its outline at " + Arrays.toString(block) + ": " + describe(region));
+                        inHole = true;
+                    }
+                }
+                if (inOuter && !inHole) {
+                    covering++;
+                }
+            }
+            int count = covering;
+            Assertions.assertTrue(count <= 1, () -> "block " + Arrays.toString(block) + " covered by " + count + " areas: " + describe(region));
+            Assertions.assertEquals(
+                    expected, count == 1,
+                    () -> "block " + Arrays.toString(block) + " expected " + (expected ? "inside" : "outside") + ": "
+                            + describe(region) + " -> " + describe(result)
+            );
+        }
+    }
+
+    private static boolean isInside(Vector2d[] outline, double px, double pz, ProtectedRegion region, int[] block) {
+        int winding = windingNumber(outline, px, pz);
+        Assertions.assertTrue(
+                Math.abs(winding) <= 1,
+                () -> "outline winds " + winding + " times around " + Arrays.toString(block) + ": " + describe(region)
+        );
+        return winding != 0;
+    }
+
+    private static String describe(RegionRenderer.Result result) {
+        var sb = new StringBuilder();
+        for (var area : result.areas()) {
+            sb.append(Arrays.toString(area.shape().getPoints()));
+            for (var hole : area.holes()) {
+                sb.append(" hole ").append(Arrays.toString(hole.getPoints()));
+            }
+            sb.append("; ");
+        }
+        return sb.toString();
     }
 
     /** Winding number of a closed polygon around a point that never lies on its boundary. */
@@ -386,29 +558,6 @@ class RegionRendererCoverageTest {
      * Removes geometrically redundant points: consecutive duplicates (zero-length edges) and points lying strictly
      * between their neighbours. Backtracking spikes are kept, so a spurious spike still changes the outline.
      */
-    private static List<Vector2d> removeStraightThroughPoints(List<Vector2d> input) {
-        List<Vector2d> points = new ArrayList<>();
-        for (int i = 0; i < input.size(); i++) {
-            if (!input.get(i).equals(input.get((i + 1) % input.size()))) {
-                points.add(input.get(i));
-            }
-        }
-        List<Vector2d> result = new ArrayList<>();
-        int size = points.size();
-        for (int i = 0; i < size; i++) {
-            Vector2d prev = points.get((i - 1 + size) % size);
-            Vector2d cur = points.get(i);
-            Vector2d next = points.get((i + 1) % size);
-            if (!isStraightThrough(
-                    (long) prev.getX(), (long) prev.getY(),
-                    (long) cur.getX(), (long) cur.getY(),
-                    (long) next.getX(), (long) next.getY())) {
-                result.add(cur);
-            }
-        }
-        return result;
-    }
-
     /** Whether {@code cur} lies strictly between {@code prev} and {@code next} on a straight line. */
     private static boolean isStraightThrough(long px, long pz, long cx, long cz, long nx, long nz) {
         long inX = cx - px;
