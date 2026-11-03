@@ -4,6 +4,7 @@ import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.flags.StringFlag;
+import com.sk89q.worldguard.protection.regions.GlobalProtectedRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.markers.ExtrudeMarker;
@@ -185,6 +186,19 @@ class DefaultWorldGuardRendererTest {
         Assertions.assertNotNull(before);
         Assertions.assertNotNull(after);
         Assertions.assertNotEquals(before, after);
+    }
+
+    @Test
+    void testRenderIfNeededDoesNotCacheRegionsWithoutResult() {
+        var renderer = new DefaultWorldGuardRenderer(
+                worldSetting(true, false, "{region_id}"),
+                new MarkerSetSetting("Regions", false, 0, Set.of())
+        );
+
+        var result = renderer.renderIfNeeded(new GlobalProtectedRegion("__global__"));
+
+        Assertions.assertNull(result);
+        Assertions.assertTrue(renderer.renderCache.isEmpty());
     }
 
     @Test

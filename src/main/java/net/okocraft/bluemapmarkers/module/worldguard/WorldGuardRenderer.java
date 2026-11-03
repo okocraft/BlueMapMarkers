@@ -35,7 +35,7 @@ abstract class WorldGuardRenderer {
     private final RegionColor ownedRegionColor;
     private final RegionColor unownedRegionColor;
     private final DetailFormatter detailFormatter;
-    private final Map<String, CachedRender> renderCache = new HashMap<>();
+    final Map<String, CachedRender> renderCache = new HashMap<>();
 
     static void registerFlags() {
         // Invoking this method triggers class initialization and registers the static flag fields.
@@ -95,7 +95,10 @@ abstract class WorldGuardRenderer {
         }
 
         var result = RegionRenderer.render(region);
-        this.renderCache.put(markerId, new CachedRender(points, minY, maxY, result));
+        if (result != null) {
+            // Regions without a result are never tracked for removal, so caching them would leak entries.
+            this.renderCache.put(markerId, new CachedRender(points, minY, maxY, result));
+        }
         return result;
     }
 
@@ -152,8 +155,8 @@ abstract class WorldGuardRenderer {
         }
     }
 
-    private record CachedRender(@NotNull List<BlockVector2> points, int minY, int maxY,
-                                @Nullable RegionRenderer.Result result) {
+    record CachedRender(@NotNull List<BlockVector2> points, int minY, int maxY,
+                        @NotNull RegionRenderer.Result result) {
     }
 
     private record RegionColor(@NotNull Color fillColor, @NotNull Color outlineColor) {
