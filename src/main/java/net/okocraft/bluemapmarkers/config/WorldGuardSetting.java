@@ -39,7 +39,6 @@ public final class WorldGuardSetting {
         public boolean enabled = true;
         public Set<String> disabledMaps = Set.of();
         public int updateInterval = 10;
-        public int updateLimit = 50;
         @Required
         public RenderSetting renderSetting;
         @Required
@@ -52,14 +51,12 @@ public final class WorldGuardSetting {
                 boolean enabled,
                 Set<String> disabledMaps,
                 int updateInterval,
-                int updateLimit,
                 RenderSetting renderSetting,
                 SeparationSetting separationSetting
         ) {
             this.enabled = enabled;
             this.disabledMaps = disabledMaps;
             this.updateInterval = updateInterval;
-            this.updateLimit = updateLimit;
             this.renderSetting = renderSetting;
             this.separationSetting = separationSetting;
         }
@@ -68,9 +65,6 @@ public final class WorldGuardSetting {
         private void validate() throws SerializationException {
             if (this.updateInterval < 0) {
                 throw new SerializationException("update-interval must be a non-negative integer");
-            }
-            if (this.updateLimit <= 0) {
-                throw new SerializationException("update-limit must be a positive integer");
             }
         }
     }

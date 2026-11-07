@@ -164,7 +164,7 @@ public class WorldGuardModule implements MarkerModule, Listener {
             this.worldUid = worldUid;
             this.renderer = renderer;
             this.setting = setting;
-            this.updater = new QueueingMarkerUpdater(setting.updateLimit);
+            this.updater = new QueueingMarkerUpdater();
             this.scheduledTasks = scheduledTasks;
         }
 
@@ -214,7 +214,7 @@ public class WorldGuardModule implements MarkerModule, Listener {
                 if (this.cooldown < 0 && !this.warned) {
                     this.warned = true;
                     logger.warn("World {} has so many protections that it cannot be updated at the specified interval!", world.getKey().asString());
-                    logger.warn("Please consider increasing values of update-interval or update-limit.");
+                    logger.warn("Please consider increasing the value of update-interval.");
                 }
             }
         }

@@ -16,18 +16,16 @@ class QueueingMarkerUpdater {
     static final long TIME_BUDGET_NANOS = TimeUnit.MILLISECONDS.toNanos(10);
 
     private final ObjectSet<RenderedRegionInfo> renderedRegions = new ObjectOpenHashSet<>();
-    private final int limit;
     private final LongSupplier nanoTime;
 
     private Queue<String> regionIdQueue;
     private ObjectSet<RenderedRegionInfo> removedRegions;
 
-    QueueingMarkerUpdater(int limit) {
-        this(limit, System::nanoTime);
+    QueueingMarkerUpdater() {
+        this(System::nanoTime);
     }
 
-    QueueingMarkerUpdater(int limit, @NotNull LongSupplier nanoTime) {
-        this.limit = limit;
+    QueueingMarkerUpdater(@NotNull LongSupplier nanoTime) {
         this.nanoTime = nanoTime;
     }
 
@@ -38,12 +36,8 @@ class QueueingMarkerUpdater {
         }
 
         long start = this.nanoTime.getAsLong();
-        for (int i = 0; i < this.limit; i++) {
-            // Rendering a region for the first time can take tens of milliseconds, so also stop when time is up.
-            if (i > 0 && this.nanoTime.getAsLong() - start >= TIME_BUDGET_NANOS) {
-                break;
-            }
-
+        // Always render at least one region so that the update progresses even if a single region is slow.
+        do {
             var id = this.regionIdQueue.poll();
 
             if (id == null) {
@@ -61,7 +55,7 @@ class QueueingMarkerUpdater {
                     this.removedRegions.remove(info);
                 }
             }
-        }
+        } while (this.nanoTime.getAsLong() - start < TIME_BUDGET_NANOS);
 
         if (this.regionIdQueue.isEmpty()) {
             this.finishUpdate(renderer);

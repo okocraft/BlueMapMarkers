@@ -5,7 +5,6 @@ import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.flags.StringFlag;
-import com.sk89q.worldguard.protection.regions.GlobalProtectedRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import de.bluecolored.bluemap.api.BlueMapMap;
@@ -160,52 +159,6 @@ class DefaultWorldGuardRendererTest {
     }
 
     @Test
-    void testRenderIfNeededReusesResultForUnchangedRegion() {
-        var renderer = new DefaultWorldGuardRenderer(
-                worldSetting(true, false, "{region_id}"),
-                new MarkerSetSetting("Regions", false, 0, Set.of())
-        );
-        var first = renderer.renderIfNeeded(region("cached"));
-
-        var second = renderer.renderIfNeeded(region("cached"));
-
-        Assertions.assertNotNull(first);
-        Assertions.assertSame(first, second);
-    }
-
-    @Test
-    void testRenderIfNeededRendersAgainWhenRegionShapeChanges() {
-        var renderer = new DefaultWorldGuardRenderer(
-                worldSetting(true, false, "{region_id}"),
-                new MarkerSetSetting("Regions", false, 0, Set.of())
-        );
-        var before = renderer.renderIfNeeded(region("changed"));
-
-        var after = renderer.renderIfNeeded(new ProtectedCuboidRegion(
-                "changed",
-                BlockVector3.at(0, 10, 0),
-                BlockVector3.at(8, 30, 4)
-        ));
-
-        Assertions.assertNotNull(before);
-        Assertions.assertNotNull(after);
-        Assertions.assertNotEquals(before, after);
-    }
-
-    @Test
-    void testRenderIfNeededDoesNotCacheRegionsWithoutResult() {
-        var renderer = new DefaultWorldGuardRenderer(
-                worldSetting(true, false, "{region_id}"),
-                new MarkerSetSetting("Regions", false, 0, Set.of())
-        );
-
-        var result = renderer.renderIfNeeded(new GlobalProtectedRegion("__global__"));
-
-        Assertions.assertNull(result);
-        Assertions.assertTrue(renderer.renderCache.isEmpty());
-    }
-
-    @Test
     void testCreateMarkersCreatesOneMarkerPerAreaWithItsHoles() {
         var renderer = new DefaultWorldGuardRenderer(
                 worldSetting(true, true, "{region_id}"),
@@ -326,7 +279,6 @@ class DefaultWorldGuardRendererTest {
                 true,
                 Set.of(),
                 10,
-                50,
                 new WorldGuardSetting.RenderSetting(
                         defaultRender,
                         new WorldGuardSetting.OwnedRegionColor(

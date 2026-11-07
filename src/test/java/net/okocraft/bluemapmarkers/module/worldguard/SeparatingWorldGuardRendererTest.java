@@ -70,7 +70,6 @@ class SeparatingWorldGuardRendererTest {
                 true,
                 Set.of(),
                 10,
-                50,
                 new WorldGuardSetting.RenderSetting(
                         true,
                         new WorldGuardSetting.OwnedRegionColor(
