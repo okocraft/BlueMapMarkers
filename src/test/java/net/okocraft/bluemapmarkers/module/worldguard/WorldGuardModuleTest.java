@@ -286,7 +286,6 @@ class WorldGuardModuleTest {
                 enabled,
                 Set.of(),
                 10,
-                50,
                 new WorldGuardSetting.RenderSetting(
                         true,
                         new WorldGuardSetting.OwnedRegionColor(

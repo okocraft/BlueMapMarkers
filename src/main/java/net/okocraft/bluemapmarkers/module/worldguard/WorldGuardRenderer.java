@@ -1,7 +1,6 @@
 package net.okocraft.bluemapmarkers.module.worldguard;
 
 import com.flowpowered.math.vector.Vector3d;
-import com.sk89q.worldedit.math.BlockVector2;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.flags.StateFlag;
@@ -20,9 +19,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 abstract class WorldGuardRenderer {
@@ -36,7 +33,6 @@ abstract class WorldGuardRenderer {
     private final RegionColor ownedRegionColor;
     private final RegionColor unownedRegionColor;
     private final DetailFormatter detailFormatter;
-    final Map<String, CachedRender> renderCache = new HashMap<>();
 
     static void registerFlags() {
         // Invoking this method triggers class initialization and registers the static flag fields.
@@ -85,22 +81,7 @@ abstract class WorldGuardRenderer {
             return null;
         }
 
-        // Regions are re-rendered periodically on the main thread; render again only when the shape changed.
-        var markerId = this.createMarkerId(region);
-        var points = region.getPoints();
-        int minY = region.getMinimumPoint().y();
-        int maxY = region.getMaximumPoint().y();
-        var cached = this.renderCache.get(markerId);
-        if (cached != null && cached.minY() == minY && cached.maxY() == maxY && cached.points().equals(points)) {
-            return cached.result();
-        }
-
-        var result = RegionRenderer.render(region);
-        if (result != null) {
-            // Regions without a result are never tracked for removal, so caching them would leak entries.
-            this.renderCache.put(markerId, new CachedRender(points, minY, maxY, result));
-        }
-        return result;
+        return RegionRenderer.render(region);
     }
 
     /**
@@ -166,7 +147,6 @@ abstract class WorldGuardRenderer {
 
     /** Removes every piece of one region put by {@link #putMarkers}. */
     void removeMarkers(@NotNull MarkerSet markerSet, @NotNull String markerId) {
-        this.renderCache.remove(markerId);
         markerSet.remove(markerId);
         for (int i = 1; markerSet.remove(pieceMarkerId(markerId, i)) != null; i++) {
             // Remove further pieces.
@@ -189,10 +169,6 @@ abstract class WorldGuardRenderer {
         } catch (NumberFormatException ignored) {
             return defaultColor;
         }
-    }
-
-    record CachedRender(@NotNull List<BlockVector2> points, int minY, int maxY,
-                        @NotNull RegionRenderer.Result result) {
     }
 
     private record RegionColor(@NotNull Color fillColor, @NotNull Color outlineColor) {

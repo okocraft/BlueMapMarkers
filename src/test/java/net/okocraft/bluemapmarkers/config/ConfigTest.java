@@ -57,7 +57,6 @@ class ConfigTest {
         Assertions.assertTrue(worldSetting.enabled);
         Assertions.assertEquals(Set.of(), worldSetting.disabledMaps);
         Assertions.assertEquals(10, worldSetting.updateInterval);
-        Assertions.assertEquals(50, worldSetting.updateLimit);
 
         var renderSetting = worldSetting.renderSetting;
         Assertions.assertTrue(renderSetting.defaultRender);
@@ -164,13 +163,13 @@ class ConfigTest {
     }
 
     @Test
-    void testLoadRejectsNonPositiveWorldGuardUpdateLimit() {
+    void testLoadIgnoresRemovedWorldGuardUpdateLimit() throws IOException {
         var yaml = MINIMAL_CONFIG.replace(
                 "    default:\n      render-setting:",
-                "    default:\n      update-limit: 0\n      render-setting:"
+                "    default:\n      update-limit: 50\n      render-setting:"
         );
 
-        Assertions.assertThrows(ConfigurateException.class, () -> this.load(yaml));
+        Assertions.assertNotNull(this.load(yaml).worldGuardSetting.worldSettingMap.get("default"));
     }
 
     @Test

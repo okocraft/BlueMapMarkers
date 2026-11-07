@@ -7,17 +7,26 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
+import java.util.concurrent.TimeUnit;
+import java.util.function.LongSupplier;
 
 class QueueingMarkerUpdater {
 
+    /** Time one update may spend on the main thread; the remaining regions are left for the next update. */
+    static final long TIME_BUDGET_NANOS = TimeUnit.MILLISECONDS.toNanos(10);
+
     private final ObjectSet<RenderedRegionInfo> renderedRegions = new ObjectOpenHashSet<>();
-    private final int limit;
+    private final LongSupplier nanoTime;
 
     private Queue<String> regionIdQueue;
     private ObjectSet<RenderedRegionInfo> removedRegions;
 
-    QueueingMarkerUpdater(int limit) {
-        this.limit = limit;
+    QueueingMarkerUpdater() {
+        this(System::nanoTime);
+    }
+
+    QueueingMarkerUpdater(@NotNull LongSupplier nanoTime) {
+        this.nanoTime = nanoTime;
     }
 
     boolean doUpdate(@NotNull WorldGuardRenderer renderer, @NotNull RegionManager regionManager) {
@@ -26,7 +35,9 @@ class QueueingMarkerUpdater {
             this.removedRegions = new ObjectOpenHashSet<>(this.renderedRegions);
         }
 
-        for (int i = 0; i < this.limit; i++) {
+        long start = this.nanoTime.getAsLong();
+        // Always render at least one region so that the update progresses even if a single region is slow.
+        do {
             var id = this.regionIdQueue.poll();
 
             if (id == null) {
@@ -44,7 +55,7 @@ class QueueingMarkerUpdater {
                     this.removedRegions.remove(info);
                 }
             }
-        }
+        } while (this.nanoTime.getAsLong() - start < TIME_BUDGET_NANOS);
 
         if (this.regionIdQueue.isEmpty()) {
             this.finishUpdate(renderer);

@@ -3,6 +3,7 @@ package net.okocraft.bluemapmarkers.module.worldguard;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -10,29 +11,16 @@ import org.mockito.Mockito;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 class QueueingMarkerUpdaterTest {
 
     @Test
-    void testUpdateProcessesRegionsInBatchesAndFinishes() {
-        var first = region("first");
-        var second = region("second");
-        var third = region("third");
-        var regions = new LinkedHashMap<String, com.sk89q.worldguard.protection.regions.ProtectedRegion>();
-        regions.put(first.getId(), first);
-        regions.put(second.getId(), second);
-        regions.put(third.getId(), third);
-
-        var regionManager = regionManager(regions);
-        var renderer = Mockito.mock(WorldGuardRenderer.class);
-        var firstInfo = new RenderedRegionInfo("first-marker", 0);
-        var secondInfo = new RenderedRegionInfo("second-marker", 0);
-        var thirdInfo = new RenderedRegionInfo("third-marker", 0);
-        Mockito.when(renderer.renderRegion(first)).thenReturn(firstInfo);
-        Mockito.when(renderer.renderRegion(second)).thenReturn(secondInfo);
-        Mockito.when(renderer.renderRegion(third)).thenReturn(thirdInfo);
-
-        var updater = new QueueingMarkerUpdater(2);
+    void testUpdateStopsWhenTimeBudgetIsUsedUpAndFinishesLater() {
+        var regionManager = regionManager(regions("first", "second", "third", "fourth"));
+        long[] now = {0};
+        var renderer = slowRenderer(now);
+        var updater = new QueueingMarkerUpdater(() -> now[0]);
 
         Assertions.assertFalse(updater.doUpdate(renderer, regionManager));
         Assertions.assertFalse(updater.isFinished());
@@ -41,24 +29,16 @@ class QueueingMarkerUpdaterTest {
 
         Assertions.assertTrue(updater.doUpdate(renderer, regionManager));
         Assertions.assertTrue(updater.isFinished());
-        Mockito.verify(renderer, Mockito.times(3)).renderRegion(Mockito.any());
+        Mockito.verify(renderer, Mockito.times(4)).renderRegion(Mockito.any());
         Mockito.verify(renderer).removeRegions(Mockito.argThat(removed -> removed.isEmpty()));
     }
 
     @Test
-    void testUpdateFinishesAndCleansUpWhenQueueEmptiesExactlyAtLimit() {
-        var first = region("first");
-        var second = region("second");
-        var regions = new LinkedHashMap<String, com.sk89q.worldguard.protection.regions.ProtectedRegion>();
-        regions.put(first.getId(), first);
-        regions.put(second.getId(), second);
-
-        var regionManager = regionManager(regions);
-        var renderer = Mockito.mock(WorldGuardRenderer.class);
-        Mockito.when(renderer.renderRegion(first)).thenReturn(new RenderedRegionInfo("first-marker", 0));
-        Mockito.when(renderer.renderRegion(second)).thenReturn(new RenderedRegionInfo("second-marker", 0));
-
-        var updater = new QueueingMarkerUpdater(2);
+    void testUpdateFinishesWhenQueueEmptiesExactlyWhenTimeIsUp() {
+        var regionManager = regionManager(regions("first", "second"));
+        long[] now = {0};
+        var renderer = slowRenderer(now);
+        var updater = new QueueingMarkerUpdater(() -> now[0]);
 
         Assertions.assertTrue(updater.doUpdate(renderer, regionManager));
         Assertions.assertTrue(updater.isFinished());
@@ -80,7 +60,7 @@ class QueueingMarkerUpdaterTest {
         Mockito.when(renderer.renderRegion(first)).thenReturn(firstInfo);
         Mockito.when(renderer.renderRegion(second)).thenReturn(secondInfo);
 
-        var updater = new QueueingMarkerUpdater(10);
+        var updater = new QueueingMarkerUpdater();
         Assertions.assertTrue(updater.doUpdate(renderer, regionManager));
 
         Mockito.clearInvocations(renderer);
@@ -109,10 +89,28 @@ class QueueingMarkerUpdaterTest {
         var renderer = Mockito.mock(WorldGuardRenderer.class);
         Mockito.when(renderer.renderRegion(region)).thenReturn(null);
 
-        var updater = new QueueingMarkerUpdater(10);
+        var updater = new QueueingMarkerUpdater();
 
         Assertions.assertTrue(updater.doUpdate(renderer, regionManager));
         Mockito.verify(renderer).removeRegions(Mockito.argThat(removed -> removed.isEmpty()));
+    }
+
+    /** Each region takes 6 ms, so the 10 ms budget is used up after two regions. */
+    private static WorldGuardRenderer slowRenderer(long[] now) {
+        var renderer = Mockito.mock(WorldGuardRenderer.class);
+        Mockito.when(renderer.renderRegion(Mockito.any())).thenAnswer(invocation -> {
+            now[0] += TimeUnit.MILLISECONDS.toNanos(6);
+            return new RenderedRegionInfo(invocation.getArgument(0, ProtectedRegion.class).getId(), 0);
+        });
+        return renderer;
+    }
+
+    private static Map<String, ProtectedRegion> regions(String... ids) {
+        var regions = new LinkedHashMap<String, ProtectedRegion>();
+        for (var id : ids) {
+            regions.put(id, region(id));
+        }
+        return regions;
     }
 
     private static RegionManager regionManager(

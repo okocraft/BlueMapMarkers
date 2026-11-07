@@ -22,7 +22,6 @@ world-guard-setting:
       enabled: true
       disabled-maps: [ ]
       update-interval: 10
-      update-limit: 50
       render-setting:
         default-render: true
         owned-region:
