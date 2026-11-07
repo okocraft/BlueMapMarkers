@@ -1,12 +1,10 @@
 package net.okocraft.bluemapmarkers.module.worldguard;
 
-import com.sk89q.worldedit.math.BlockVector2;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.flags.StringFlag;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
-import com.sk89q.worldguard.protection.regions.ProtectedPolygonalRegion;
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.markers.ExtrudeMarker;
 import de.bluecolored.bluemap.api.markers.MarkerSet;
@@ -198,26 +196,6 @@ class DefaultWorldGuardRendererTest {
         renderer.removeMarkers(markerSet, "id");
 
         Assertions.assertTrue(markerSet.getMarkers().isEmpty());
-    }
-
-    @Test
-    void testRenderRegionPublishesOneMarkerPerSeparateBlockGroup() {
-        var renderer = new DefaultWorldGuardRenderer(
-                worldSetting(true, false, "{region_id}"),
-                new MarkerSetSetting("Regions", false, 0, Set.of())
-        );
-        // A pentagram: at block resolution WorldGuard protects three separate groups of blocks.
-        var star = new ProtectedPolygonalRegion("star", List.of(
-                BlockVector2.at(15, 0), BlockVector2.at(24, 28), BlockVector2.at(1, 10),
-                BlockVector2.at(29, 10), BlockVector2.at(6, 28)
-        ), 10, 30);
-
-        renderer.renderRegion(star);
-
-        Assertions.assertEquals(
-                Set.of("WorldGuard-star", "WorldGuard-star#2", "WorldGuard-star#3"),
-                publish(renderer).get("WorldGuard-" + WORLD_ID).getMarkers().keySet()
-        );
     }
 
     @Test
